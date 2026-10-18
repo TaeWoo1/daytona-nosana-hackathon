@@ -52,8 +52,8 @@
 
 | layout | qwen3.5-9b | gpt-oss-20b | gemma4-26b | claude | worst model |
 |---|---|---|---|---|---|
-| A_original | 56% (n=9) | 50% (n=10) | 100% (n=9) | 100% (n=10) | 50% (gpt-oss-20b) |
-| C_faq_structured | 100% (n=2) | 100% (n=1) | 100% (n=3) | 100% (n=1) | 100% (claude) |
+| A_original | 67% (n=6) | 50% (n=10) | 100% (n=9) | 100% (n=8) | 50% (gpt-oss-20b) |
+| C_faq_structured | 100% (n=5) | 100% (n=5) | 100% (n=5) | 100% (n=5) | 100% (claude) |
 | NOPAGE | 0% (n=15) | 3% (n=15) | 0% (n=15) | 20% (n=15) | 0% (gemma4-26b) |
 
 | layout | question | correct | not_found | wrong | invalid | n |
@@ -63,8 +63,8 @@
 | NOPAGE | q3_signup | 0 | 11 | 1 | 0 | 12 |
 | NOPAGE | q4_billing | 3 | 9 | 0 | 0 | 12 |
 | NOPAGE | q5_windows | 0 | 12 | 0 | 0 | 12 |
-| A_original | q1_gpu_ondemand | 24 | 0 | 14 | 0 | 38 |
-| C_faq_structured | q1_gpu_ondemand | 7 | 0 | 0 | 0 | 7 |
+| A_original | q1_gpu_ondemand | 21 | 0 | 12 | 0 | 33 |
+| C_faq_structured | q1_gpu_ondemand | 20 | 0 | 0 | 0 | 20 |
 
 ### mode: rendered_text_v2_n3
 
@@ -116,11 +116,11 @@
 | C_faq_structured | q4_billing | 12 | 0 | 0 | 0 | 12 |
 | C_faq_structured | q5_windows | 9 | 0 | 0 | 3 | 12 |
 
-Excluded infra errors: {'openai: RateLimitError': 60, 'claude: BrowserLaunchCrash (render.py traceback)': 2, 'claude: DaytonaProcessExecutionTimeoutError': 2, 'gpt-oss-20b: DaytonaProcessExecutionTimeoutError': 4, 'qwen3.5-9b: DaytonaProcessExecutionTimeoutError': 4, 'gemma4-26b: DaytonaProcessExecutionTimeoutError': 3}
+Excluded infra errors: {'openai: RateLimitError': 60, 'claude: BrowserRenderError': 2, 'qwen3.5-9b: BrowserRenderError': 3, 'qwen3.5-9b: DaytonaProcessExecutionTimeoutError': 1, 'gemma4-26b: DaytonaProcessExecutionTimeoutError': 1}
 
 ### Browser behaviour (rendered_text runs): click vs outcome, per run set × layout × model
 
-**Real browser in Daytona, styled page, q1: on the original tabbed layout A, agents that clicked the On-demand tab were fully correct 24/28, agents that didn't click 0/10; A overall 24/38 correct with 14/38 confident wrong answers, while the explicit layout C was 7/7 correct.**
+**Real browser in Daytona, styled page, q1: on the original tabbed layout A, agents that clicked the On-demand tab were fully correct 21/23, agents that didn't click 0/10; A overall 21/33 correct with 12/33 confident wrong answers, while the explicit layout C was 20/20 correct.**
 
 Each cell is k/n (rate). confident_wrong = a value was asserted and it was wrong.
 
@@ -146,13 +146,13 @@ Each cell is k/n (rate). confident_wrong = a value was asserted and it was wrong
 | runs_rendered_v2 | C_faq_structured | gemma4-26b | 0/3 (0%) | 3/3 (100%) | 0/3 (0%) | 0/3 (0%) | 0/3 (0%) | 0/0 (–) | 3/3 (100%) |
 | runs_rendered_v2 | C_faq_structured | gpt-oss-20b | 0/3 (0%) | 3/3 (100%) | 0/3 (0%) | 0/3 (0%) | 0/3 (0%) | 0/0 (–) | 3/3 (100%) |
 | runs_rendered_v2 | C_faq_structured | qwen3.5-9b | 3/3 (100%) | 3/3 (100%) | 0/3 (0%) | 0/3 (0%) | 0/3 (0%) | 3/3 (100%) | 0/0 (–) |
-| runs_rendered_v2_n10 | A_original | ALL | 28/38 (74%) | 24/38 (63%) | 14/38 (37%) | 0/38 (0%) | 0/38 (0%) | 24/28 (86%) | 0/10 (0%) |
-| runs_rendered_v2_n10 | A_original | claude | 10/10 (100%) | 10/10 (100%) | 0/10 (0%) | 0/10 (0%) | 0/10 (0%) | 10/10 (100%) | 0/0 (–) |
+| runs_rendered_v2_n10 | A_original | ALL | 23/33 (70%) | 21/33 (64%) | 12/33 (36%) | 0/33 (0%) | 0/33 (0%) | 21/23 (91%) | 0/10 (0%) |
+| runs_rendered_v2_n10 | A_original | claude | 8/8 (100%) | 8/8 (100%) | 0/8 (0%) | 0/8 (0%) | 0/8 (0%) | 8/8 (100%) | 0/0 (–) |
 | runs_rendered_v2_n10 | A_original | gemma4-26b | 9/9 (100%) | 9/9 (100%) | 0/9 (0%) | 0/9 (0%) | 0/9 (0%) | 9/9 (100%) | 0/0 (–) |
 | runs_rendered_v2_n10 | A_original | gpt-oss-20b | 0/10 (0%) | 0/10 (0%) | 10/10 (100%) | 0/10 (0%) | 0/10 (0%) | 0/0 (–) | 0/10 (0%) |
-| runs_rendered_v2_n10 | A_original | qwen3.5-9b | 9/9 (100%) | 5/9 (56%) | 4/9 (44%) | 0/9 (0%) | 0/9 (0%) | 5/9 (56%) | 0/0 (–) |
-| runs_rendered_v2_n10 | C_faq_structured | ALL | 2/7 (29%) | 7/7 (100%) | 0/7 (0%) | 0/7 (0%) | 0/7 (0%) | 2/2 (100%) | 5/5 (100%) |
-| runs_rendered_v2_n10 | C_faq_structured | claude | 0/1 (0%) | 1/1 (100%) | 0/1 (0%) | 0/1 (0%) | 0/1 (0%) | 0/0 (–) | 1/1 (100%) |
-| runs_rendered_v2_n10 | C_faq_structured | gemma4-26b | 0/3 (0%) | 3/3 (100%) | 0/3 (0%) | 0/3 (0%) | 0/3 (0%) | 0/0 (–) | 3/3 (100%) |
-| runs_rendered_v2_n10 | C_faq_structured | gpt-oss-20b | 0/1 (0%) | 1/1 (100%) | 0/1 (0%) | 0/1 (0%) | 0/1 (0%) | 0/0 (–) | 1/1 (100%) |
-| runs_rendered_v2_n10 | C_faq_structured | qwen3.5-9b | 2/2 (100%) | 2/2 (100%) | 0/2 (0%) | 0/2 (0%) | 0/2 (0%) | 2/2 (100%) | 0/0 (–) |
+| runs_rendered_v2_n10 | A_original | qwen3.5-9b | 6/6 (100%) | 4/6 (67%) | 2/6 (33%) | 0/6 (0%) | 0/6 (0%) | 4/6 (67%) | 0/0 (–) |
+| runs_rendered_v2_n10 | C_faq_structured | ALL | 5/20 (25%) | 20/20 (100%) | 0/20 (0%) | 0/20 (0%) | 0/20 (0%) | 5/5 (100%) | 15/15 (100%) |
+| runs_rendered_v2_n10 | C_faq_structured | claude | 0/5 (0%) | 5/5 (100%) | 0/5 (0%) | 0/5 (0%) | 0/5 (0%) | 0/0 (–) | 5/5 (100%) |
+| runs_rendered_v2_n10 | C_faq_structured | gemma4-26b | 0/5 (0%) | 5/5 (100%) | 0/5 (0%) | 0/5 (0%) | 0/5 (0%) | 0/0 (–) | 5/5 (100%) |
+| runs_rendered_v2_n10 | C_faq_structured | gpt-oss-20b | 0/5 (0%) | 5/5 (100%) | 0/5 (0%) | 0/5 (0%) | 0/5 (0%) | 0/0 (–) | 5/5 (100%) |
+| runs_rendered_v2_n10 | C_faq_structured | qwen3.5-9b | 5/5 (100%) | 5/5 (100%) | 0/5 (0%) | 0/5 (0%) | 0/5 (0%) | 5/5 (100%) | 0/0 (–) |

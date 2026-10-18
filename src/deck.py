@@ -15,8 +15,9 @@ RUNS = [{**json.loads(l), "_set": Path(f).stem} for f in RUN_FILES for l in open
 for _r in RUNS:  # earlier v2 batch (n=3) kept but not used for the headline
     if _r["_set"] == "runs_rendered_v2":
         _r["mode"] = "rendered_text_v2_n3"
-OK_RUNS = [r for r in RUNS if not r.get("error") or "XML syntax error" in r["error"]
-           and not any("render.py" in (t.get("output") or "") and "Traceback" in (t.get("output") or "") for t in r.get("tool_calls", []))]
+sys.path.insert(0, str(ROOT / "src"))
+import grade as _grade  # noqa: E402
+OK_RUNS = [r for r in RUNS if not _grade.infra_reason(r)]
 
 LL = {"A_original": "A · original (tabs)", "B_explicit": "B · explicit table", "C_faq_structured": "C · + FAQ + JSON-LD",
       "NOPAGE": "No page (memory)"}

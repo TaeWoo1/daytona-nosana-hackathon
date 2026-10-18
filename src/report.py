@@ -11,6 +11,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 S = json.loads((ROOT / "results/summary.json").read_text())
 G = [json.loads(l) for l in open(ROOT / "results/graded.jsonl")]
+sys.path.insert(0, str(ROOT / "src"))
+import grade as _grade  # noqa: E402
 RUN_FILES = sys.argv[1:] or [str(ROOT / "results/runs.jsonl")]
 RUNS = [{**json.loads(l), "_set": Path(f).stem} for f in RUN_FILES for l in open(f) if l.strip()]
 for _r in RUNS:  # the earlier v2 batch (n=3) is kept but reported separately from the headline v2 batch (n10 file)
@@ -113,7 +115,7 @@ def replay(mode):
     cols = []
     for l in ("A_original", "C_faq_structured"):
         r = next((r for r in RUNS if r["model"] == m and r["layout"] == l and r["question"] == "q1_gpu_ondemand"
-                  and r["mode"] == mode and (not r.get("error") or "XML syntax error" in r["error"])), None)
+                  and r["mode"] == mode and not _grade.infra_reason(r)), None)
         if not r:
             continue
         steps = "".join(f'<li><code>open_page("{html.escape(t["path"])}")</code> → {len(t["output"] or "")} chars, '
@@ -157,9 +159,7 @@ for mode in modes:
 sys.path.insert(0, str(ROOT / "src"))
 import grade as _grade  # noqa: E402
 
-RENDERED = [r for r in RUNS if str(r.get("mode")).startswith("rendered_text") and r.get("run_id")
-            and (not r.get("error") or "XML syntax error" in r["error"]) and not any("render.py" in (t.get("output") or "") and "Traceback" in (t.get("output") or "")
-                for t in r.get("tool_calls", []))]
+RENDERED = [r for r in RUNS if str(r.get("mode")).startswith("rendered_text") and r.get("run_id") and not _grade.infra_reason(r)]
 VER_LABEL = {"v1": "v1 plain mirror", "v2": "v2 styled n=3", "v2·n10": "v2 styled, headline batch (A n=10, C n=5)"}
 
 

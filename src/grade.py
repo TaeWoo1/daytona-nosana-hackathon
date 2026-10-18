@@ -161,6 +161,23 @@ def behavior(g):
     return rows
 
 
+def infra_reason(r):
+    """Why a run is excluded as infra (not a reader mistake), or None.
+    A tool call that failed because of Daytona/the in-sandbox browser makes the whole run infra:
+    exec timeout, Chromium launch crash (render.py traceback), or the browser failing to render the page."""
+    if r.get("error"):
+        return None if "XML syntax error" in r["error"] else r["error"].split(":")[0]
+    for t in r.get("tool_calls", []):
+        o = t.get("output") or ""
+        if "render.py" in o and "Traceback" in o:
+            return "BrowserLaunchCrash"
+        # in render.py this line only comes from a browser exception (a bad path is reported as "HTTP 404", not ERROR);
+        # in html_text/visible_text the extractor prints ERROR for a wrong path, which IS a reader mistake
+        if "ERROR: could not open" in o and str(r.get("mode")).startswith("rendered_text"):
+            return "BrowserRenderError"
+    return None
+
+
 def main():
     files = sys.argv[1:] or [str(ROOT / "results/runs.jsonl")]
     runs = [{**json.loads(l), "run_set": Path(f).stem} for f in files for l in open(f) if l.strip()]
@@ -171,8 +188,7 @@ def main():
     # a malformed tool call rejected by the Ollama server (HTTP 500 "XML syntax error") IS a reader failure -> graded as invalid
     def is_infra(r):
         # Chromium failing to launch in an overloaded sandbox (render.py traceback) is infra too, not a reader mistake
-        crash = any("render.py" in (t.get("output") or "") and "Traceback" in (t.get("output") or "") for t in r.get("tool_calls", []))
-        return crash or (bool(r.get("error")) and "XML syntax error" not in r["error"])
+        return bool(infra_reason(r))
     infra = [r for r in runs if is_infra(r)]
     runs = [r for r in runs if not is_infra(r)]
     g = [grade(r) for r in runs]
@@ -182,8 +198,12 @@ def main():
     s = summarize(g)
     ie = defaultdict(int)
     for r in infra:
-        ie[f"{r['model']}: {(r.get('error') or 'BrowserLaunchCrash (render.py traceback)').split(':')[0]}"] += 1
+        ie[f"{r['model']}: {infra_reason(r)}"] += 1
     s["excluded_infra_errors"] = dict(ie)
+    by_set = defaultdict(lambda: defaultdict(int))
+    for r in infra:
+        by_set[r["run_set"]][f"{r['layout']} {r['model']}: {infra_reason(r)}"] += 1
+    s["excluded_infra_by_run_set"] = {k: dict(v) for k, v in by_set.items()}
     s["source_files"] = [str(Path(f).relative_to(ROOT)) if Path(f).is_absolute() else f for f in files]
     (ROOT / "results/summary.json").write_text(json.dumps(s, indent=1))
     print(f"graded {len(g)} runs; excluded infra errors: {dict(ie)}")

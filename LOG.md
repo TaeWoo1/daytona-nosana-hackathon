@@ -121,3 +121,20 @@
 - 16:37 Headline (generated from summary.json → behavior_headline): A 24/38 correct, 14/38 confident wrong, correct given clicked 24/28, correct given no click 0/10, C 7/7.
   - Per model on A: Claude 10/10 (clicked 10/10). Gemma 9/9 (clicked 9/9). gpt-oss 0/10, never clicked, 10/10 confident $0.57 "on_demand". Qwen 5/9, clicked 9/9, 4 answered $0.57 "unknown".
   - Added: summary.json `behavior` (click / correct / confident_wrong / not_found / invalid rates, correct given clicked or no click, each k/n, per run set × layout × model + ALL) and the matching table in results_table.md. Dashboard Replay: Autoplay (1.5 s/step, A and C together, enlarged verdict badge at the end), defaults ★ gpt-oss (A wrong, C correct) and ★ Claude (A clicked → correct). README and deck now use the n10 batch. 513 graded runs.
+- 16:39 Reran C for the headline: batch `163908-e52d`, q1, C_faq_structured, 5 reps per model, 4 sandboxes, `--render-timeout 180`, `--render-per-sandbox 2` (new pool options).
+  - Done: 20 runs in 85 s, 0 infra failures.
+  - The overloaded first C batch `163227-69e7` was moved, unchanged, to `results/runs_rendered_v2_n10_C_overloaded.jsonl`. It is not used.
+- 16:40 Infra rule unified (`grade.infra_reason`, also used by report and deck): a run is infra when
+  - (a) the run errored for a non-reader reason (Daytona exec timeout, 429), or
+  - (b) in rendered modes, a tool output shows a browser failure (render.py traceback or "ERROR: could not open" = browser exception).
+  - In html_text/visible_text, "ERROR: could not open" means the reader picked a wrong path, so it stays a reader failure. That was checked: the earlier batches' counts are unchanged.
+  - Headline batch A exclusions, counted separately in `summary.json → excluded_infra_by_run_set`: claude BrowserRenderError 2, qwen BrowserRenderError 3, qwen exec timeout 1, gemma exec timeout 1.
+- 16:41 Headline (summary.json `behavior_headline`):
+  - A: 21/33 correct, 12/33 confident wrong. Correct given clicked: 21/23. Correct given no click: 0/10 (all gpt-oss, $0.57 "on_demand").
+  - C: 20/20.
+  - Per model on A: Claude 8/8, Gemma 9/9, gpt-oss 0/10 (clicked 0/10), Qwen 4/6.
+  - 521 graded runs in total.
+- 16:42 `results/stage.html` (`src/stage.py`): 40 s autoplay, 1920×1080, dark.
+  - Scenes: 60-run tile grid → gpt-oss A $0.57 red box vs C $0.99 green box → Claude click ripple + step 2 $0.99 → per-model dot scoreboard with clicked / confident-wrong (k/n from summary.json).
+  - Box coordinates were measured on the fixed v2 frames.
+  - Frames used: gpt-oss A `163227-9cca-…-r0`, gpt-oss C `163908-e52d-…-r3`, Claude A `163227-9cca-…-r0`.

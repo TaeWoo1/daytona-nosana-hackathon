@@ -26,6 +26,9 @@ class Pool:
         self.sandboxes = {}  # layout -> [sandbox]
         self._rr = {}
         self._lock = threading.Lock()
+        self.render_timeout = 60
+        self.render_per_sandbox = 0  # >0: cap concurrent Chromium processes per sandbox (1 vCPU each)
+        self._sem = {}
 
     def _make(self, layout, w):
         t = time.time()
@@ -80,7 +83,13 @@ class Pool:
         import uuid
         remote = f"/tmp/shot_{uuid.uuid4().hex[:8]}.png"
         cmd = f"python3 {RENDER} {shlex.quote(str(path))} {shlex.quote(json.dumps(clicks))} {remote}"
-        r = sb.process.exec(cmd, timeout=60)
+        if self.render_per_sandbox:
+            with self._lock:
+                sem = self._sem.setdefault(sb.id, threading.Semaphore(self.render_per_sandbox))
+            with sem:
+                r = sb.process.exec(cmd, timeout=self.render_timeout)
+        else:
+            r = sb.process.exec(cmd, timeout=self.render_timeout)
         frame = None
         try:
             Path(local_png).parent.mkdir(parents=True, exist_ok=True)

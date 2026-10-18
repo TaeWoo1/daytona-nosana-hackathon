@@ -1,0 +1,102 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>AgentReadable Stage</title>
+<style>
+:root{--bg:#0a0a0a;--fg:#f5f5f5;--mut:#9a9a9a;--ok:#22c55e;--bad:#ef4444;--nf:#f59e0b;--inf:#3f3f46}
+html,body{margin:0;background:var(--bg);color:var(--fg);font-family:Inter,"Helvetica Neue",Arial,sans-serif;overflow:hidden}
+#stage{width:1920px;height:1080px;position:relative;transform-origin:0 0}
+.scene{position:absolute;inset:0;opacity:0;transition:opacity .6s;padding:60px 80px;box-sizing:border-box}
+.scene.on{opacity:1}
+h1{font-size:56px;font-weight:600;margin:0 0 12px} .sub{font-size:26px;color:var(--mut);margin:0 0 30px}
+.grid{display:grid;grid-template-columns:repeat(10,1fr);gap:14px;width:1300px}
+.tile{height:64px;border-radius:10px;background:#1a1a1a;opacity:.15;transform:scale(.8);transition:all .25s;display:flex;align-items:center;justify-content:center;font-size:15px;color:#000;font-weight:700}
+.tile.lit{opacity:1;transform:scale(1)} .correct{background:var(--ok)} .wrong{background:var(--bad)} .notfound{background:var(--nf)} .infra{background:var(--inf);color:#aaa}
+.legend{margin-top:24px;font-size:22px;color:var(--mut)} .legend span{display:inline-block;width:18px;height:18px;border-radius:4px;margin:0 8px 0 24px;vertical-align:-2px}
+.pair{display:flex;gap:60px;margin-top:10px}
+.shot{position:relative;width:800px;height:780px;background-repeat:no-repeat;background-size:2200px auto;border:2px solid #333;border-radius:12px;overflow:hidden}
+.box{position:absolute;border:6px solid;border-radius:8px;opacity:0;transition:opacity .4s} .box.on{opacity:1}
+.box.bad{border-color:var(--bad);box-shadow:0 0 30px var(--bad)} .box.good{border-color:var(--ok);box-shadow:0 0 30px var(--ok)}
+.cap{font-size:34px;font-weight:700;margin-top:16px;opacity:0;transition:opacity .4s} .cap.on{opacity:1} .cap.bad{color:var(--bad)} .cap.good{color:var(--ok)}
+.lbl{font-size:28px;color:var(--mut);margin-bottom:10px}
+.click{position:absolute;width:40px;height:40px;margin:-20px 0 0 -20px;border-radius:50%;border:5px solid #60a5fa;opacity:0}
+.click.go{animation:ping 1.2s ease-out 2}
+@keyframes ping{0%{opacity:1;transform:scale(.4)}100%{opacity:0;transform:scale(3)}}
+.board{position:absolute;left:80px;right:80px;bottom:70px}
+.brow{display:flex;align-items:center;gap:26px;font-size:34px;margin:22px 0} .bname{width:260px}
+.dots{display:flex;gap:14px} .dot{width:38px;height:38px;border-radius:50%;background:#222;transition:background .2s}
+.bstat{color:var(--mut);font-size:30px}
+.final{font-size:40px;margin-top:30px}
+</style></head><body><div id="stage">
+
+<section class="scene" id="s0"><h1>60 real-browser runs inside Daytona sandboxes</h1>
+<p class="sub">q1 "RTX 4090 that won't be interrupted" · styled pricing page · A = original tabs (10 reps/model), C = explicit layout (5 reps/model)</p>
+<div class="grid" id="grid"></div>
+<div class="legend"><span class="correct"></span>correct<span class="wrong"></span>confident wrong<span class="notfound"></span>not found<span class="infra"></span>infra (excluded, 7)</div></section>
+
+<section class="scene" id="s1"><h1>gpt-oss 20B · same question, two layouts</h1>
+<div class="pair">
+ <div><div class="lbl">A · original tabs (Preemptible shown)</div><div class="shot" style="background-image:url('frames/163227-9cca-gpt-oss-20b-A_original-q1-r0/step_1.png');background-position:0 -1230px">
+   <div class="box bad" id="b1" style="left:592px;top:646px;width:160px;height:64px"></div></div>
+   <div class="cap bad" id="c1">answered $0.57 'on-demand' ✗ (actual $0.99)</div></div>
+ <div><div class="lbl">C · explicit labels + FAQ</div><div class="shot" style="background-image:url('frames/163908-e52d-gpt-oss-20b-C_faq_structured-q1-r3/step_1.png');background-position:0 -1230px">
+   <div class="box good" id="b2" style="left:606px;top:688px;width:148px;height:64px"></div></div>
+   <div class="cap good" id="c2">answered $0.99 on-demand ✓</div></div>
+</div></section>
+
+<section class="scene" id="s2"><h1>Claude · clicks the On-demand tab first</h1>
+<div class="pair">
+ <div><div class="lbl" id="cl">step 1 · open_page → Preemptible tab shown</div>
+  <div class="shot" id="cshot" style="background-image:url('frames/163227-9cca-claude-A_original-q1-r0/step_1.png');background-position:0 -1230px">
+   <div class="click" id="ck" style="left:616px;top:110px"></div>
+   <div class="box good" id="b3" style="left:592px;top:646px;width:160px;height:64px"></div></div>
+  <div class="cap good" id="c3">click("On-demand") → answered $0.99 on-demand ✓</div></div>
+ <div style="font-size:34px;line-height:1.5;padding-top:80px;color:var(--mut)">On layout A the right price is<br>one click away.<br><br>
+  <b style="color:var(--fg)">Clicked → correct 21/23</b><br>
+  <b style="color:var(--fg)">No click → correct 0/10</b></div>
+</div></section>
+
+<section class="scene" id="s3"><h1>Layout A · per model (each dot = one run)</h1>
+<div class="board" id="board"></div></section>
+</div>
+<script>
+const TILES = [{"m": "claude", "l": "A", "v": "correct"}, {"m": "claude", "l": "A", "v": "correct"}, {"m": "claude", "l": "A", "v": "infra"}, {"m": "claude", "l": "A", "v": "infra"}, {"m": "claude", "l": "A", "v": "correct"}, {"m": "claude", "l": "A", "v": "correct"}, {"m": "claude", "l": "A", "v": "correct"}, {"m": "claude", "l": "A", "v": "correct"}, {"m": "claude", "l": "A", "v": "correct"}, {"m": "claude", "l": "A", "v": "correct"}, {"m": "gpt-oss-20b", "l": "A", "v": "wrong"}, {"m": "gpt-oss-20b", "l": "A", "v": "wrong"}, {"m": "gpt-oss-20b", "l": "A", "v": "wrong"}, {"m": "gpt-oss-20b", "l": "A", "v": "wrong"}, {"m": "gpt-oss-20b", "l": "A", "v": "wrong"}, {"m": "gpt-oss-20b", "l": "A", "v": "wrong"}, {"m": "gpt-oss-20b", "l": "A", "v": "wrong"}, {"m": "gpt-oss-20b", "l": "A", "v": "wrong"}, {"m": "gpt-oss-20b", "l": "A", "v": "wrong"}, {"m": "gpt-oss-20b", "l": "A", "v": "wrong"}, {"m": "gemma4-26b", "l": "A", "v": "correct"}, {"m": "gemma4-26b", "l": "A", "v": "correct"}, {"m": "gemma4-26b", "l": "A", "v": "correct"}, {"m": "gemma4-26b", "l": "A", "v": "correct"}, {"m": "gemma4-26b", "l": "A", "v": "infra"}, {"m": "gemma4-26b", "l": "A", "v": "correct"}, {"m": "gemma4-26b", "l": "A", "v": "correct"}, {"m": "gemma4-26b", "l": "A", "v": "correct"}, {"m": "gemma4-26b", "l": "A", "v": "correct"}, {"m": "gemma4-26b", "l": "A", "v": "correct"}, {"m": "qwen3.5-9b", "l": "A", "v": "infra"}, {"m": "qwen3.5-9b", "l": "A", "v": "infra"}, {"m": "qwen3.5-9b", "l": "A", "v": "infra"}, {"m": "qwen3.5-9b", "l": "A", "v": "infra"}, {"m": "qwen3.5-9b", "l": "A", "v": "correct"}, {"m": "qwen3.5-9b", "l": "A", "v": "correct"}, {"m": "qwen3.5-9b", "l": "A", "v": "correct"}, {"m": "qwen3.5-9b", "l": "A", "v": "correct"}, {"m": "qwen3.5-9b", "l": "A", "v": "wrong"}, {"m": "qwen3.5-9b", "l": "A", "v": "wrong"}, {"m": "claude", "l": "C", "v": "correct"}, {"m": "claude", "l": "C", "v": "correct"}, {"m": "claude", "l": "C", "v": "correct"}, {"m": "claude", "l": "C", "v": "correct"}, {"m": "claude", "l": "C", "v": "correct"}, {"m": "gpt-oss-20b", "l": "C", "v": "correct"}, {"m": "gpt-oss-20b", "l": "C", "v": "correct"}, {"m": "gpt-oss-20b", "l": "C", "v": "correct"}, {"m": "gpt-oss-20b", "l": "C", "v": "correct"}, {"m": "gpt-oss-20b", "l": "C", "v": "correct"}, {"m": "gemma4-26b", "l": "C", "v": "correct"}, {"m": "gemma4-26b", "l": "C", "v": "correct"}, {"m": "gemma4-26b", "l": "C", "v": "correct"}, {"m": "gemma4-26b", "l": "C", "v": "correct"}, {"m": "gemma4-26b", "l": "C", "v": "correct"}, {"m": "qwen3.5-9b", "l": "C", "v": "correct"}, {"m": "qwen3.5-9b", "l": "C", "v": "correct"}, {"m": "qwen3.5-9b", "l": "C", "v": "correct"}, {"m": "qwen3.5-9b", "l": "C", "v": "correct"}, {"m": "qwen3.5-9b", "l": "C", "v": "correct"}];
+const BOARD = [{"name": "Claude", "dots": ["correct", "correct", "infra", "infra", "correct", "correct", "correct", "correct", "correct", "correct"], "clicked": "8/8", "cw": "0/8", "ok": "8/8"}, {"name": "gpt-oss 20B", "dots": ["wrong", "wrong", "wrong", "wrong", "wrong", "wrong", "wrong", "wrong", "wrong", "wrong"], "clicked": "0/10", "cw": "10/10", "ok": "0/10"}, {"name": "Gemma 4 26B", "dots": ["correct", "correct", "correct", "correct", "infra", "correct", "correct", "correct", "correct", "correct"], "clicked": "9/9", "cw": "0/9", "ok": "9/9"}, {"name": "Qwen 3.5 9B", "dots": ["infra", "infra", "infra", "infra", "correct", "correct", "correct", "correct", "wrong", "wrong"], "clicked": "6/6", "cw": "2/6", "ok": "4/6"}];
+const FINAL = "A: 21/33 correct, 12/33 confident wrong  \u00b7  C: 20/20 correct";
+const F2 = "frames/163227-9cca-claude-A_original-q1-r0/step_2.png";
+const $ = id => document.getElementById(id);
+function fit() { const s = Math.min(innerWidth / 1920, innerHeight / 1080); $("stage").style.transform = `scale(${s})`; }
+addEventListener("resize", fit); fit();
+const grid = $("grid");
+TILES.forEach(t => { const d = document.createElement("div"); d.className = "tile " + t.v; d.textContent = t.l; grid.appendChild(d); });
+const board = $("board");
+BOARD.forEach(b => {
+  board.insertAdjacentHTML("beforeend", `<div class="brow"><div class="bname">${b.name}</div><div class="dots">${b.dots.map(v => `<div class="dot" data-v="${v}"></div>`).join("")}</div>
+  <div class="bstat" style="opacity:0">clicked ${b.clicked} · confident-wrong ${b.cw}</div></div>`);
+});
+board.insertAdjacentHTML("beforeend", `<div class="final" style="opacity:0">${FINAL}</div>`);
+const COL = {correct: "var(--ok)", wrong: "var(--bad)", notfound: "var(--nf)", infra: "var(--inf)"};
+const T = [];
+const at = (s, f) => T.push(setTimeout(f, s * 1000));
+function scene(id) { document.querySelectorAll(".scene").forEach(s => s.classList.toggle("on", s.id === id)); }
+function play() {
+  T.forEach(clearTimeout); T.length = 0;
+  document.querySelectorAll(".lit,.on").forEach(e => e.classList.remove("lit", "on"));
+  $("cshot").style.backgroundImage = `url('frames/163227-9cca-claude-A_original-q1-r0/step_1.png')`; $("cl").textContent = "step 1 · open_page → Preemptible tab shown";
+  document.querySelectorAll(".dot").forEach(d => d.style.background = "#222");
+  document.querySelectorAll(".bstat,.final").forEach(d => d.style.opacity = 0);
+  scene("s0");
+  [...grid.children].forEach((t, i) => at(0.3 + i * 0.075, () => t.classList.add("lit")));
+  at(5, () => scene("s1")); at(7, () => $("b1").classList.add("on")); at(8, () => $("c1").classList.add("on"));
+  at(12, () => $("b2").classList.add("on")); at(13, () => $("c2").classList.add("on"));
+  at(20, () => scene("s2")); at(22, () => { const c = $("ck"); c.classList.remove("go"); void c.offsetWidth; c.classList.add("go"); });
+  at(24.5, () => { $("cshot").style.backgroundImage = `url('${F2}')`; $("cl").textContent = 'step 2 · click("On-demand") → On-demand prices'; });
+  at(25.5, () => $("b3").classList.add("on")); at(26.5, () => $("c3").classList.add("on"));
+  at(30, () => scene("s3"));
+  const rows = [...board.querySelectorAll(".brow")];
+  rows.forEach((row, ri) => {
+    row.querySelectorAll(".dot").forEach((d, di) => at(30.5 + ri * 2 + di * 0.15, () => d.style.background = COL[d.dataset.v]));
+    at(30.5 + ri * 2 + 1.6, () => row.querySelector(".bstat").style.opacity = 1);
+  });
+  at(39, () => board.querySelector(".final").style.opacity = 1);
+}
+play();
+addEventListener("keydown", e => { if (e.key === " " || e.key === "r") play(); if (e.key === "f") document.documentElement.requestFullscreen(); });
+</script></body></html>

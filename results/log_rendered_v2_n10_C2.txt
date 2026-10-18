@@ -1,0 +1,27 @@
+[batch 163908-e52d] models=['qwen3.5-9b', 'gpt-oss-20b', 'gemma4-26b', 'claude'] layouts=['C_faq_structured'] questions=['q1_gpu_ondemand'] reps=5 mode=rendered_text_v2
+[sandbox] C_faq_structured/w3 ready id=49280d56 in 5.0s
+[sandbox] C_faq_structured/w0 ready id=715a4b4a in 6.0s
+[sandbox] C_faq_structured/w2 ready id=38d2068e in 7.5s
+[sandbox] C_faq_structured/w1 ready id=eee595e1 in 9.2s
+[batch 163908-e52d] 4 sandboxes up in 9.2s
+[  1/20] claude       C_faq_structured q1_gpu_ondemand      rep0 tools=1  10.9s  {"usd_per_hour": 0.99, "pricing_type": "on_demand", "evidence_quote": "On-demand RTX 4090 
+[  2/20] claude       C_faq_structured q1_gpu_ondemand      rep3 tools=1  11.1s  {"usd_per_hour": 0.99, "pricing_type": "on_demand", "evidence_quote": "On-demand RTX 4090 
+[  3/20] gpt-oss-20b  C_faq_structured q1_gpu_ondemand      rep3 tools=1  11.4s  {"usd_per_hour": 0.99, "pricing_type": "on_demand", "evidence_quote": "Nvidia RTX 4090\n$0
+[  4/20] claude       C_faq_structured q1_gpu_ondemand      rep2 tools=1  13.7s  {"usd_per_hour": 0.99, "pricing_type": "on_demand", "evidence_quote": "Nvidia RTX 4090 $0.
+[  5/20] gpt-oss-20b  C_faq_structured q1_gpu_ondemand      rep0 tools=1  13.9s  {"usd_per_hour": 0.99, "pricing_type": "on_demand", "evidence_quote": "Nvidia RTX 4090 $0.
+[  6/20] claude       C_faq_structured q1_gpu_ondemand      rep1 tools=1  13.9s  {"usd_per_hour": 0.99, "pricing_type": "on_demand", "evidence_quote": "Nvidia RTX 4090 $0.
+[  7/20] gpt-oss-20b  C_faq_structured q1_gpu_ondemand      rep1 tools=1  17.6s  {"usd_per_hour": 0.99, "pricing_type": "on_demand", "evidence_quote": "On-demand RTX 4090 
+[  8/20] gpt-oss-20b  C_faq_structured q1_gpu_ondemand      rep2 tools=1  17.8s  {"usd_per_hour": 0.99, "pricing_type": "on_demand", "evidence_quote": "On-demand RTX 4090 
+[  9/20] gemma4-26b   C_faq_structured q1_gpu_ondemand      rep1 tools=1  18.0s  {"usd_per_hour": 0.99, "pricing_type": "on_demand", "evidence_quote": "On-demand RTX 4090 
+[ 10/20] gemma4-26b   C_faq_structured q1_gpu_ondemand      rep2 tools=1  18.6s  {"usd_per_hour": 0.99, "pricing_type": "on_demand", "evidence_quote": "On-demand RTX 4090 
+[ 11/20] gpt-oss-20b  C_faq_structured q1_gpu_ondemand      rep4 tools=1   8.5s  {"usd_per_hour": 0.99, "pricing_type": "on_demand", "evidence_quote": "Nvidia RTX 4090 $0.
+[ 12/20] claude       C_faq_structured q1_gpu_ondemand      rep4 tools=1  11.1s  {"usd_per_hour": 0.99, "pricing_type": "on_demand", "evidence_quote": "Nvidia RTX 4090 $0.
+[ 13/20] gemma4-26b   C_faq_structured q1_gpu_ondemand      rep0 tools=1  22.4s  {"usd_per_hour": 0.99, "pricing_type": "on_demand", "evidence_quote": "On-demand RTX 4090 
+[ 14/20] gemma4-26b   C_faq_structured q1_gpu_ondemand      rep3 tools=1  22.9s  {"usd_per_hour": 0.99, "pricing_type": "on_demand", "evidence_quote": "On-demand RTX 4090 
+[ 15/20] gemma4-26b   C_faq_structured q1_gpu_ondemand      rep4 tools=1  10.2s  {"usd_per_hour": 0.99, "pricing_type": "on_demand", "evidence_quote": "On-demand RTX 4090 
+[ 16/20] qwen3.5-9b   C_faq_structured q1_gpu_ondemand      rep3 tools=4  41.0s  {"usd_per_hour": 0.99, "pricing_type": "on_demand", "evidence_quote": "Q: What does an RTX
+[ 17/20] qwen3.5-9b   C_faq_structured q1_gpu_ondemand      rep2 tools=4  43.9s  {"usd_per_hour": 0.99, "pricing_type": "on_demand", "evidence_quote": "Q: What does an RTX
+[ 18/20] qwen3.5-9b   C_faq_structured q1_gpu_ondemand      rep0 tools=4  46.9s  {"usd_per_hour": 0.99, "pricing_type": "on_demand", "evidence_quote": "Q: What does an RTX
+[ 19/20] qwen3.5-9b   C_faq_structured q1_gpu_ondemand      rep1 tools=4  54.9s  {"usd_per_hour": 0.99, "pricing_type": "on_demand", "evidence_quote": "On-demand RTX 4090 
+[ 20/20] qwen3.5-9b   C_faq_structured q1_gpu_ondemand      rep4 tools=4  35.3s  {"usd_per_hour": 0.99, "pricing_type": "on_demand", "evidence_quote": "Q: What does an RTX
+[batch 163908-e52d] done 20 runs in 85.5s -> results/runs_rendered_v2_n10.jsonl

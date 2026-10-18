@@ -28,6 +28,8 @@ def main():
     ap.add_argument("--mode", default="html_text")
     ap.add_argument("--workers", type=int, default=2)
     ap.add_argument("--out", default="results/runs.jsonl")
+    ap.add_argument("--render-timeout", type=int, default=60)
+    ap.add_argument("--render-per-sandbox", type=int, default=0)
     a = ap.parse_args()
 
     gold = json.loads((ROOT / "data/gold/daytona_pricing_facts.draft.json").read_text())
@@ -44,6 +46,7 @@ def main():
     site_version = "v2" if a.mode == "rendered_text_v2" else "v1"
     pool = Pool([l for l in layouts if l != "NOPAGE"], a.workers, render=rendered,
                 sites_dir="sites_v2" if site_version == "v2" else "sites")
+    pool.render_timeout, pool.render_per_sandbox = a.render_timeout, a.render_per_sandbox
     out = ROOT / a.out
     out.parent.mkdir(exist_ok=True)
     wlock = threading.Lock()

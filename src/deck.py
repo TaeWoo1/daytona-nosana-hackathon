@@ -112,7 +112,7 @@ slides = []
 slides.append("""<section class="title"><h1>AgentReadable</h1>
 <p class="big">AI agents now read your website for your customers.<br>We measure how accurately your real pages get through to each AI reader,
 by layout and by model, and show which layout survives even the weakest model.</p>
-<p class="spons">Built on <b>Daytona</b> sandboxes · <b>Nosana</b> GPUs</p></section>""")
+<p class="spons">Built on <b>Daytona</b> sandboxes · <b>Nosana</b> GPUs · github.com/TaeWoo1/daytona-nosana-hackathon</p></section>""")
 slides.append(f"""<section><h2>Problem: the agent quotes the wrong price</h2>
 <p>Customer → AI agent: <i>"I need an RTX 4090 that won't be interrupted. How much per hour?"</i></p>
 <p>Real page <code>daytona.io/pricing</code> (captured 2026-10-18 15:35 KST): the GPU table opens on the <b>Preemptible</b> tab ($0.57/h).
@@ -195,6 +195,20 @@ slides.append(f"""<section><h2>Limitations and next steps</h2><ul>
 <li>OpenAI excluded: the API key had no credits ({html.escape(json.dumps(excl))}).</li>
 <li>Gold ambiguity: "first 5 GiB free" per sandbox or per org? (Both readings are inside the q2 tolerance.)</li>
 <li>Next: more pages and verticals, an auto-fix suggestion per failing fact, and a CI check: "does this layout change break any AI reader?"</li></ul></section>""")
+_hb = {(b["run_set"], b["layout"], b["model"]): b for b in S.get("behavior", [])}
+_a, _c = _hb.get(("runs_rendered_v2_n10", "A_original", "ALL")), _hb.get(("runs_rendered_v2_n10", "C_faq_structured", "ALL"))
+_k = lambda x: f"{x['k']}/{x['n']}"  # noqa: E731
+if _a and _c:
+    slides.append(f"""<section class="jc"><h2>Judging criteria</h2><div class="two">
+<div class="card"><h3>Completeness</h3><ul><li>End-to-end: real page → gold → layouts → Daytona sandboxes → reader agents → code grader → dashboard, replay, deck</li>
+<li>{n_runs} graded runs committed in results/, so every number can be checked without rerunning</li></ul></div>
+<div class="card"><h3>Innovation</h3><ul><li>Measures comprehension accuracy (does the agent get the facts right?), not search visibility</li>
+<li>Reading mode as a dimension: crawler text vs static visible text vs a real browser with a click tool</li></ul></div>
+<div class="card"><h3>Real-Life Problem Solving</h3><ul><li>Real daytona.io/pricing: on the tabbed layout, runs with no click were correct {_k(_a['correct_given_no_click'])} and {_k(_a['confident_wrong_rate'])} runs were confident wrong</li>
+<li>Same facts, explicit layout C: {_k(_c['correct_rate'])} correct</li></ul></div>
+<div class="card"><h3>Sponsored Product Usage</h3><ul><li>Daytona: {n_sb} ephemeral sandboxes; headless Chromium + every tool call inside the sandbox; parallel fan-out</li>
+<li>Nosana: 3 open-weight models (Qwen 3.5 9B, gpt-oss 20B, Gemma 4 26B) on RTX 3090/4090</li></ul></div></div>
+<p class="note">Rendered-browser numbers: results/runs_rendered_v2_n10.jsonl, q1 (A 10 reps/model, C 5 reps/model), from summary.json → behavior.</p></section>""")
 slides.append("""<section class="title"><h2>Thanks</h2><p class="big">AgentReadable: make sure every AI reader quotes your page right.</p>
 <p>Solo build · GitHub @TaeWoo1</p><p>Repo: github.com/TaeWoo1/daytona-nosana-hackathon</p><p class="spons"><b>Daytona</b> · <b>Nosana</b></p></section>""")
 
@@ -212,6 +226,7 @@ h1{{font-size:72px;margin:120px 0 20px}} h2{{font-size:40px;margin:0 0 24px}} .b
 .tr{{flex:1;display:flex;height:24px;border-radius:4px;overflow:hidden;background:#eee}} .s{{display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:13px}}
 .ct{{border-collapse:collapse;font-size:18px;margin-bottom:12px}} .ct td,.ct th{{border:1px solid #ccc;padding:4px 8px;text-align:center}}
 .frames{{display:grid;grid-template-columns:1fr 1fr;gap:8px}} .frames figure{{margin:0}} .frames img{{width:100%;border:1px solid #ccc}}
+.jc .two{{gap:14px}} .jc .card{{padding:6px 16px}} .jc h3{{margin:4px 0;font-size:22px}} .jc ul{{margin:2px 0 6px;font-size:17px;line-height:1.35;padding-left:20px}}
 .frames figcaption{{font-size:13px;color:#666}} .note2{{font-size:13px;color:#666}} .hl{{font-size:17px;font-weight:600;margin:8px 0 0}}
 .correct{{background:hsl(130 55% 36%)}} .not_found{{background:hsl(40 80% 45%)}} .wrong{{background:hsl(0 65% 48%)}} .invalid{{background:#888}} .lg .s{{padding:2px 10px;margin-right:6px}} .tag{{color:#fff;border-radius:4px;padding:1px 8px;font-size:16px;margin-left:6px}} .ok{{background:hsl(130 55% 36%)}} .bad{{background:hsl(0 65% 48%)}}
 </style></head><body>{''.join(slides)}</body></html>"""

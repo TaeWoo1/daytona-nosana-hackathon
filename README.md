@@ -4,6 +4,11 @@
 
 Built solo (GitHub @TaeWoo1) at Daytona HackSprint Seoul (2026-10-18) with **Daytona** sandboxes and **Nosana** GPUs.
 
+- **Problem:** on the real `daytona.io/pricing`, the GPU table opens on the Preemptible tab. Agents asked for an RTX 4090 "that won't be interrupted" quote $0.57 instead of the on-demand $0.99.
+- **What we built:** a fan-out evaluator. Each page layout is served in its own Daytona sandbox, and reader agents (3 open-weight models on Nosana GPUs + Claude) answer with a real headless Chromium inside the sandbox. A code-only grader checks every answer.
+- **Headline (q1, real browser, styled page, `results/runs_rendered_v2_n10.jsonl`):** on the original tabbed layout, runs that clicked the On-demand tab were correct 21/23, and runs that didn't were correct 0/10 (12/33 runs confident wrong overall). The explicit layout C was correct 20/20. 521 graded runs in total.
+- **Demo:** `results/stage.html` (40 s autoplay), `results/dashboard.html` (Replay with screenshots), `./demo.sh` (live rerun), `deck/deck.pdf`.
+
 ## The problem
 
 A customer asks an AI agent: *"I need an RTX 4090 that won't be interrupted. How much per hour?"*
@@ -199,7 +204,7 @@ Excluded infra errors: {'openai: RateLimitError': 60}
 
 ### Completeness
 - End-to-end pipeline: real page → gold (`data/gold/`) → layouts (`src/gen_sites.py`) → Daytona sandboxes (`src/daytona_pool.py`) → reader agents (`src/agent.py`) → code grader (`src/grade.py`) → dashboard (`results/dashboard.html`) and deck (`deck/deck.pdf`).
-- 521 graded runs committed in `results/runs*.jsonl`, with `results/summary.json` and 97 replay screenshots in `results/frames/`. Every number here can be checked without rerunning.
+- 521 graded runs committed in `results/runs*.jsonl`, with `results/summary.json` and 247 replay screenshots in `results/frames/`. Every number here can be checked without rerunning.
 - One-command live demo: `./demo.sh` (~20 s).
 
 ### Innovation
@@ -211,8 +216,8 @@ Excluded infra errors: {'openai: RateLimitError': 60}
 - Fix shown on the same facts: layout C (labelled columns + FAQ + JSON-LD) is 12/12 for q1 in every reading mode, including both real-browser runs.
 
 ### Sponsored Product Usage
-- **Daytona**: 24 ephemeral sandboxes across all batches, each serving one layout on localhost:8000. All 624 reader tool calls (`open_page`, `click`) ran inside the sandboxes. **Headless Chromium (Playwright) runs inside the sandbox** for rendered_text, with screenshots per step. Fan-out: several sandboxes per layout in parallel (each rendered batch: 24 runs on 6 sandboxes, 87 s for v1 and 88 s for v2).
-- **Nosana**: 3 open-weight reader models (Qwen 3.5 9B on an RTX 3090; gpt-oss 20B and Gemma 4 26B on RTX 4090s) served with Ollama on decentralized GPUs. the 3 Nosana models' graded runs were served from Nosana.
+- **Daytona**: 32 ephemeral sandboxes across all graded batches, each serving one layout on localhost:8000. All 741 graded reader tool calls (`open_page`, `click`) ran inside the sandboxes. **Headless Chromium (Playwright) runs inside the sandbox** for rendered_text, with screenshots per step. Fan-out: several sandboxes per layout in parallel (each rendered batch: 24 runs on 6 sandboxes, 87 s for v1 and 88 s for v2).
+- **Nosana**: 3 open-weight reader models (Qwen 3.5 9B on an RTX 3090; gpt-oss 20B and Gemma 4 26B on RTX 4090s) served with Ollama on decentralized GPUs. 391 of the 521 graded runs were served from Nosana.
 
 ## Limitations (read before quoting numbers)
 

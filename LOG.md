@@ -138,3 +138,18 @@
   - Scenes: 60-run tile grid → gpt-oss A $0.57 red box vs C $0.99 green box → Claude click ripple + step 2 $0.99 → per-model dot scoreboard with clicked / confident-wrong (k/n from summary.json).
   - Box coordinates were measured on the fixed v2 frames.
   - Frames used: gpt-oss A `163227-9cca-…-r0`, gpt-oss C `163908-e52d-…-r3`, Claude A `163227-9cca-…-r0`.
+- 16:51 (Aside) Computer-use demo, qualitative, n=1 per cell. Script: `src/cu_demo_stdlib.py`, stdlib REST only. Outputs: `results/cu_aside/<layout>[_gemma]/` with step PNGs, run.json, and the Daytona recording.mp4.
+  - Setup: Daytona `daytona-medium` sandbox, computeruse desktop (Xvfb, 1024x768), Chromium on the v2 styled site, Daytona recording API.
+  - The reader sees **screenshots only** and acts with pixel `click(x,y)` / `scroll` / `answer`.
+  - Claude (claude-sonnet-4-5):
+    - A: scroll → pixel-click on the "On-demand" pill (308,417) → answered $0.99 on_demand, correct.
+    - C: scroll → answered $0.99 on_demand without any click, correct.
+  - Gemma 4 26B (Nosana Ollama, OpenAI-compatible image input), A:
+    - Its stated intent every step was "switch to On-demand", but it clicked (301,538) six times. That point is the "AMD MI355X $3.44/h" row, ~120 px below the tab.
+    - It never hit the tab and ran out of steps with no answer (not_found).
+    - Caveat: the coordinate miss may partly come from image resizing inside Ollama (a harness factor), not only model grounding. Unverified.
+  - Not part of the headline numbers.
+- 16:52 Submission polish against the docs/JUDGING.md checklist:
+  - README: the top lines now carry the problem, what we built, the headline with n (generated from summary.json behavior), and demo pointers.
+  - README sponsor/completeness counts recomputed over all graded batches: 32 sandboxes, 741 graded tool calls, 391 Nosana runs, 247 frames.
+  - Deck: repo URL on the title slide, plus a "Judging criteria" slide with the 4 official names (16 slides). LICENSE not added (user's call).

@@ -129,10 +129,13 @@ slides.append("""<section><h2>Method and metrics</h2>
 for mode in modes[::-1]:
     slides.append(f"""<section><h2>q1 "won't be interrupted" · {mode}</h2>{strict_q(mode, "q1_gpu_ondemand")}
 <p class="note">Cell = fully correct runs / runs (gold $0.99/h on-demand); "wrong" = runs with a confident wrong value. Source: results/summary.json (cells_by_question).</p></section>""")
-if "rendered_text" in modes:
+RENDER_VER = {"rendered_text": ("v1 plain mirror", "results/runs_rendered.jsonl", ("700", "520", "660", "80")),
+              "rendered_text_v2": ("v2 styled", "results/runs_rendered_v2.jsonl", ("400", "400", "625", "0"))}
+for rmode in [m for m in RENDER_VER if m in modes]:
+    ver_label, src_file, (ch, cw, cy, cx) = RENDER_VER[rmode]
     sys.path.insert(0, str(ROOT / "src"))
     import grade as _grade
-    rend = [r for r in OK_RUNS if r["mode"] == "rendered_text" and r["layout"] == "A_original"]
+    rend = [r for r in OK_RUNS if r["mode"] == rmode and r["layout"] == "A_original"]
     rows = []
     for m in MODELS:
         xs = [r for r in rend if r["model"] == m]
@@ -151,20 +154,20 @@ if "rendered_text" in modes:
         crops = []
         for k, f in enumerate((f1, f2)):
             # crop the GPU section of the full-page screenshot so it is readable on a slide (macOS sips)
-            out = ROOT / "deck" / f"frame_crop_{k + 1}.png"
-            subprocess.run(["sips", "-c", "700", "520", "--cropOffset", "660", "80", str(ROOT / "results" / f), "--out", str(out)],
+            out = ROOT / "deck" / f"frame_crop_{rmode}_{k + 1}.png"
+            subprocess.run(["sips", "-c", ch, cw, "--cropOffset", cy, cx, str(ROOT / "results" / f), "--out", str(out)],
                            check=True, capture_output=True)
             crops.append(out.name)
         f1, f2 = crops
         frames = (f'<div class="frames"><figure><img src="{f1}"><figcaption>step 1 · open_page: Preemptible tab shown</figcaption></figure>'
                   f'<figure><img src="{f2}"><figcaption>after click("On-demand")</figcaption></figure></div>'
                   f'<p class="note2">GPU section cropped from full-page screenshots. Frames: {ML[ex["model"]]}, run {html.escape(ex["run_id"])} (results/frames/).</p>')
-    slides.append(f"""<section><h2>Real browser in Daytona (rendered_text) · layout A</h2><div class="two">
+    slides.append(f"""<section><h2>Real browser in Daytona · layout A · {ver_label}</h2><div class="two">
 <div><table class="ct"><tr><th>model</th><th>clicked On-demand tab</th><th>fully correct | clicked</th><th>fully correct | no click</th></tr>{"".join(rows)}</table>
 <p>Chromium runs inside the Daytona sandbox (Playwright). The reader can <code>click(text)</code>; each step is screenshotted.
 Agents that clicked the tab could read $0.99. Agents that didn't, couldn't.</p></div><div>{frames}</div></div>
-<p class="note">q1 only, layout A, 3 reps per model. Source: results/runs_rendered.jsonl graded by src/grade.py.</p></section>""")
-for mode in [m for m in modes if m != "rendered_text"]:
+<p class="note">q1 only, layout A, 3 reps per model. Source: {src_file} graded by src/grade.py.</p></section>""")
+for mode in [m for m in modes if not m.startswith("rendered_text")]:
     slides.append(f"""<section><h2>All 5 questions · {mode}</h2>{heat(mode)}
 <p class="note">Cell = mean share of answer fields matching gold. n = runs (5 questions × 3 reps). Outlined column = weakest model per layout. Source: results/summary.json.</p></section>""")
 if "visible_text" in modes:
@@ -181,7 +184,7 @@ slides.append(f"""<section><h2>Sponsor usage</h2><div class="two">
 <p class="note">Counts from results/runs*.jsonl. Graded runs total: {n_runs}.</p></section>""")
 slides.append(f"""<section><h2>Limitations and next steps</h2><ul>
 <li>One page, a simplified mirror (A), 3 reps per cell. Directional, not proof.</li>
-<li>visible_text is a static approximation (drops hidden elements). rendered_text (real Chromium) was run for q1 only, on layouts A and C.</li>
+<li>visible_text is a static approximation (drops hidden elements). rendered_text (real Chromium) was run for q1 only, on layouts A and C, on two site versions: v1 plain mirror and v2 styled like the real page (both are our re-creations, not the live site).</li>
 <li>Field accuracy gives partial credit. See the per-question "fully correct" view.</li>
 <li>OpenAI excluded: the API key had no credits ({html.escape(json.dumps(excl))}).</li>
 <li>Gold ambiguity: "first 5 GiB free" per sandbox or per org? (Both readings are inside the q2 tolerance.)</li>

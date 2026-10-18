@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Pricing | Daytona</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#0a0a0a;color:#a1a1a1;font-family:Inter,"Helvetica Neue",Arial,sans-serif;font-size:16px;line-height:1.5}
+a{color:inherit;text-decoration:none}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;letter-spacing:.02em}
+nav{display:flex;align-items:center;gap:22px;max-width:1200px;margin:0 auto;padding:18px 24px;color:#fff}
+nav .logo{font-size:24px;font-weight:600;letter-spacing:-.02em}
+nav .sep{color:#666}
+nav .links{display:flex;gap:22px;font-size:14px}
+nav .right{margin-left:auto;display:flex;gap:10px}
+.btn{display:inline-block;padding:8px 18px;border-radius:6px;font-size:14px}
+.btn-signin{background:#0f1f3d;color:#4b8cff}.btn-dark{background:#1f1f1f;color:#fff}
+.hero{text-align:center;padding:90px 24px 80px}
+.hero h1{color:#fff;font-size:64px;font-weight:500;line-height:1.15;letter-spacing:-.02em;margin:0 0 40px}
+.hero .cta{display:flex;justify-content:center;gap:24px}
+.btn-blue{background:#3b82f6;color:#fff;padding:16px 32px;border-radius:4px;font-size:18px}
+.btn-outline{border:1px solid #444;color:#fff;padding:16px 32px;border-radius:4px;font-size:18px}
+.grid{display:grid;grid-template-columns:400px 1fr;max-width:1200px;margin:0 auto;border:1px solid #262626}
+.left{border-right:1px solid #262626}
+.card{padding:26px 30px;border-bottom:1px solid #262626}
+.card:last-child{border-bottom:0}
+.card h2{color:#fff;font-size:20px;font-weight:400;margin:0 0 12px;display:flex;align-items:center;gap:10px}
+.card h2 .ico{display:inline-block;width:20px;height:20px;border:2px solid #fff;border-radius:3px}
+.row{display:flex;justify-content:space-between;font-size:18px;margin:6px 0}
+.row p{margin:0}.row .v{color:#a1a1a1}
+.note{font-size:13px;color:#737373;margin-top:8px}
+.gpuhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.gpuhead h2{margin:0}
+.pill{display:flex;border:1px solid #333;border-radius:10px;padding:4px}
+.pill button{background:transparent;border:0;color:#8a8a8a;font:inherit;font-size:16px;padding:8px 14px;border-radius:7px;cursor:pointer}
+.pill button[aria-selected=true]{background:#1c1c1c;color:#fff;box-shadow:0 0 0 1px #333}
+.gpucols{display:flex;justify-content:space-between;font-size:12px;color:#737373;margin-bottom:6px}
+.right-col{padding:44px}
+.right-col h2{color:#fff;font-size:46px;font-weight:400;letter-spacing:-.01em;margin:0 0 26px}
+.right-col p{font-size:20px;margin:0}.right-col .hl{color:#fff}
+.sec{max-width:1200px;margin:0 auto;padding:40px 24px}
+.sec h2,.sec h3{color:#fff;font-weight:400}
+.sec ul{padding-left:20px}
+.faq h3{font-size:18px;margin:22px 0 6px}.faq p{margin:0}
+footer{max-width:1200px;margin:0 auto;padding:40px 24px;color:#666;font-size:13px}
+</style>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Product", "name": "Daytona Sandboxes", "offers": [{"@type": "Offer", "name": "Nvidia B300 on-demand", "priceSpecification": {"@type": "UnitPriceSpecification", "price": 7.1, "priceCurrency": "USD", "unitText": "hour"}}, {"@type": "Offer", "name": "Nvidia B300 preemptible (may be interrupted)", "priceSpecification": {"@type": "UnitPriceSpecification", "price": 4.08, "priceCurrency": "USD", "unitText": "hour"}}, {"@type": "Offer", "name": "Nvidia B200 on-demand", "priceSpecification": {"@type": "UnitPriceSpecification", "price": 6.25, "priceCurrency": "USD", "unitText": "hour"}}, {"@type": "Offer", "name": "Nvidia B200 preemptible (may be interrupted)", "priceSpecification": {"@type": "UnitPriceSpecification", "price": 3.59, "priceCurrency": "USD", "unitText": "hour"}}, {"@type": "Offer", "name": "AMD MI355X on-demand", "priceSpecification": {"@type": "UnitPriceSpecification", "price": 5.99, "priceCurrency": "USD", "unitText": "hour"}}, {"@type": "Offer", "name": "AMD MI355X preemptible (may be interrupted)", "priceSpecification": {"@type": "UnitPriceSpecification", "price": 3.44, "priceCurrency": "USD", "unitText": "hour"}}, {"@type": "Offer", "name": "Nvidia H200 on-demand", "priceSpecification": {"@type": "UnitPriceSpecification", "price": 4.54, "priceCurrency": "USD", "unitText": "hour"}}, {"@type": "Offer", "name": "Nvidia H200 preemptible (may be interrupted)", "priceSpecification": {"@type": "UnitPriceSpecification", "price": 2.61, "priceCurrency": "USD", "unitText": "hour"}}, {"@type": "Offer", "name": "Nvidia H100 on-demand", "priceSpecification": {"@type": "UnitPriceSpecification", "price": 3.95, "priceCurrency": "USD", "unitText": "hour"}}, {"@type": "Offer", "name": "Nvidia H100 preemptible (may be interrupted)", "priceSpecification": {"@type": "UnitPriceSpecification", "price": 2.27, "priceCurrency": "USD", "unitText": "hour"}}, {"@type": "Offer", "name": "Nvidia RTX PRO 6000 on-demand", "priceSpecification": {"@type": "UnitPriceSpecification", "price": 3.03, "priceCurrency": "USD", "unitText": "hour"}}, {"@type": "Offer", "name": "Nvidia RTX PRO 6000 preemptible (may be interrupted)", "priceSpecification": {"@type": "UnitPriceSpecification", "price": 1.74, "priceCurrency": "USD", "unitText": "hour"}}, {"@type": "Offer", "name": "Nvidia RTX 5090 on-demand", "priceSpecification": {"@type": "UnitPriceSpecification", "price": 1.29, "priceCurrency": "USD", "unitText": "hour"}}, {"@type": "Offer", "name": "Nvidia RTX 5090 preemptible (may be interrupted)", "priceSpecification": {"@type": "UnitPriceSpecification", "price": 0.74, "priceCurrency": "USD", "unitText": "hour"}}, {"@type": "Offer", "name": "Nvidia RTX 4090 on-demand", "priceSpecification": {"@type": "UnitPriceSpecification", "price": 0.99, "priceCurrency": "USD", "unitText": "hour"}}, {"@type": "Offer", "name": "Nvidia RTX 4090 preemptible (may be interrupted)", "priceSpecification": {"@type": "UnitPriceSpecification", "price": 0.57, "priceCurrency": "USD", "unitText": "hour"}}, {"@type": "Offer", "name": "vCPU", "priceSpecification": {"@type": "UnitPriceSpecification", "price": 0.0504, "priceCurrency": "USD", "unitText": "vCPU hour"}}, {"@type": "Offer", "name": "Memory", "priceSpecification": {"@type": "UnitPriceSpecification", "price": 0.0162, "priceCurrency": "USD", "unitText": "GiB hour"}}, {"@type": "Offer", "name": "Storage (first 5 GiB free)", "priceSpecification": {"@type": "UnitPriceSpecification", "price": 0.000108, "priceCurrency": "USD", "unitText": "GiB hour"}}, {"@type": "Offer", "name": "Windows", "priceSpecification": {"@type": "UnitPriceSpecification", "price": 0.0858, "priceCurrency": "USD", "unitText": "vCPU hour"}}]}</script></head><body>
+<nav><a class="logo" href="/">Daytona</a><span class="sep">/</span>
+<div class="links mono"><a href="/docs">DOCS</a><a href="/customers">CUSTOMERS</a><a href="/pricing">PRICING</a><a href="/startups">STARTUPS</a><a href="/blog">BLOG</a></div>
+<div class="right mono"><a class="btn btn-signin" href="/signin">Sign in</a><a class="btn btn-dark" href="/contact">Contact us</a></div></nav>
+<header class="hero"><h1>Build for free,<br>pay as you scale.</h1>
+<div class="cta mono"><a class="btn-blue" href="/signup">Start for free</a><a class="btn-outline" href="/contact">Contact Sales</a></div></header>
+<div class="grid"><div class="left">
+  <div class="card"><h2><span class="ico"></span>Compute</h2>
+    <div class="row"><p>vCPU</p><p class="v">$0.0504 per vCPU per hour</p></div></div>
+  <div class="card"><h2><span class="ico"></span>GPU prices ($ per hour)</h2>
+    <div class="gpucols"><span>GPU</span><span>Preemptible (may be interrupted) | On-demand (not interrupted)</span></div>
+<div class="row"><p>Nvidia B300</p><p class="v">$4.08/h &nbsp;|&nbsp; $7.10/h</p></div>
+<div class="row"><p>Nvidia B200</p><p class="v">$3.59/h &nbsp;|&nbsp; $6.25/h</p></div>
+<div class="row"><p>AMD MI355X</p><p class="v">$3.44/h &nbsp;|&nbsp; $5.99/h</p></div>
+<div class="row"><p>Nvidia H200</p><p class="v">$2.61/h &nbsp;|&nbsp; $4.54/h</p></div>
+<div class="row"><p>Nvidia H100</p><p class="v">$2.27/h &nbsp;|&nbsp; $3.95/h</p></div>
+<div class="row"><p>Nvidia RTX PRO 6000</p><p class="v">$1.74/h &nbsp;|&nbsp; $3.03/h</p></div>
+<div class="row"><p>Nvidia RTX 5090</p><p class="v">$0.74/h &nbsp;|&nbsp; $1.29/h</p></div>
+<div class="row"><p>Nvidia RTX 4090</p><p class="v">$0.57/h &nbsp;|&nbsp; $0.99/h</p></div>
+  </div>
+  <div class="card"><h2><span class="ico"></span>Memory</h2>
+    <div class="row"><p>GiB</p><p class="v">$0.0162 per GiB per hour</p></div></div>
+  <div class="card"><h2><span class="ico"></span>Storage (disk)</h2>
+    <div class="row"><p>GiB</p><p class="v">$0.000108 per GiB per hour</p></div>
+    <p class="note">The first 5 GiB are free; you pay only for storage above 5 GiB.</p></div>
+  <div class="card"><h2><span class="ico"></span>Windows OS</h2>
+    <div class="row"><p>Windows</p><p class="v">$0.0858 per vCPU per hour</p></div></div>
+</div>
+<div class="right-col"><h2>Instant Sandboxes. Pay-as-You-Go.</h2>
+<p>Daytona lets you spin up sandboxes in milliseconds and shut them down just as fast.</p>
+<p>Use what you need, when you need it. <span class="hl">$200 in free compute included.</span></p></div>
+</div>
+<section class="sec faq"><h2>Pricing FAQ</h2>
+<h3>Q: What does an RTX 4090 GPU cost if I need it not to be interrupted?</h3>
+<p>A: On-demand RTX 4090 costs $0.99 per hour. The preemptible price ($0.57 per hour) can be interrupted.</p>
+<h3>Q: How do I calculate the cost of a CPU sandbox?</h3>
+<p>A: Add vCPU count x $0.0504/h, plus memory GiB x $0.0162/h, plus disk GiB above the first 5 free GiB x $0.000108/h.</p>
+<h3>Q: Do I need a credit card to start?</h3>
+<p>A: No. The free trial requires no credit card and includes $200 in free compute.</p>
+<h3>Q: How is usage billed?</h3>
+<p>A: All billing is calculated per second.</p>
+<h3>Q: How much does a Windows sandbox cost?</h3>
+<p>A: Windows costs $0.0858 per vCPU per hour.</p>
+</section>
+<section class="sec">
+  <p>All billing is calculated per second.</p>
+  <ul><li>Sign up for a free trial - no credit card required</li><li>Pay as you go with usage-based pricing</li><li>Unlock volume discounts as you scale</li></ul>
+  <h3>Start-ups</h3>
+  <p>Daytona supports startups with up to $50k in credits for free.</p>
+  <a class="mono" href="/startups">Sign up for credits</a>
+  <h3>Enterprise</h3>
+  <p>Designed for businesses that need larger limits, SSO, audit logs, or BYOC</p>
+  <a class="mono" href="/contact">Contact Sales</a>
+</section>
+<footer class="mono">COMPANY &nbsp; <a href="/about">About</a> &nbsp; <a href="/careers">Careers</a></footer>
+
+</body></html>

@@ -1,7 +1,7 @@
 """Fan out reader runs: layouts x models x questions x reps -> results/runs.jsonl
 
 usage: .venv/bin/python src/run_matrix.py [--models a,b] [--layouts A_original,...] [--questions q1,...]
-                                          [--reps 3] [--mode html_text|visible_text] [--workers 2] [--out results/runs.jsonl]
+                                          [--reps 3] [--mode html_text|visible_text|rendered_text|rendered_text_v2] [--workers 2] [--out results/runs.jsonl]
 """
 import argparse
 import itertools
@@ -39,7 +39,11 @@ def main():
     batch = time.strftime("%H%M%S") + "-" + uuid.uuid4().hex[:4]
     print(f"[batch {batch}] models={list(ms)} layouts={layouts} questions={[q['id'] for q in qs]} reps={a.reps} mode={a.mode}")
 
-    pool = Pool([l for l in layouts if l != "NOPAGE"], a.workers, render=a.mode == "rendered_text")
+    # rendered_text = plain mirror sites (v1); rendered_text_v2 = same browser reader on the styled sites_v2/
+    rendered = a.mode.startswith("rendered_text")
+    site_version = "v2" if a.mode == "rendered_text_v2" else "v1"
+    pool = Pool([l for l in layouts if l != "NOPAGE"], a.workers, render=rendered,
+                sites_dir="sites_v2" if site_version == "v2" else "sites")
     out = ROOT / a.out
     out.parent.mkdir(exist_ok=True)
     wlock = threading.Lock()
@@ -59,7 +63,7 @@ def main():
             click_fn = None
             if l == "NOPAGE":
                 page_fn, sbid = None, None
-            elif a.mode == "rendered_text":
+            elif rendered:
                 sb = pool.pick(l)
                 sbid = sb.id
                 # browser state per run: current path + click history, replayed on each (stateless) sandbox call
@@ -83,7 +87,7 @@ def main():
             rec = agent.run(mid, client, name, extra, q, page_fn, click_fn=click_fn)
             rec["run_id"] = run_id
             rec.update({"batch": batch, "layout": l, "rep": rep, "mode": a.mode if l != "NOPAGE" else "none",
-                        "sandbox_id": sbid, "ts": time.strftime("%Y-%m-%dT%H:%M:%S%z")})
+                        "sandbox_id": sbid, "site_version": site_version, "ts": time.strftime("%Y-%m-%dT%H:%M:%S%z")})
             with wlock, out.open("a") as f:
                 f.write(json.dumps(rec, ensure_ascii=False) + "\n")
             return rec

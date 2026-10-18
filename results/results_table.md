@@ -48,6 +48,24 @@
 | A_original | q1_gpu_ondemand | 8 | 3 | 1 | 0 | 12 |
 | C_faq_structured | q1_gpu_ondemand | 12 | 0 | 0 | 0 | 12 |
 
+### mode: rendered_text_v2
+
+| layout | qwen3.5-9b | gpt-oss-20b | gemma4-26b | claude | worst model |
+|---|---|---|---|---|---|
+| A_original | 100% (n=3) | 50% (n=3) | 100% (n=3) | 100% (n=3) | 50% (gpt-oss-20b) |
+| C_faq_structured | 100% (n=3) | 100% (n=3) | 100% (n=3) | 100% (n=3) | 100% (claude) |
+| NOPAGE | 0% (n=15) | 3% (n=15) | 0% (n=15) | 20% (n=15) | 0% (gemma4-26b) |
+
+| layout | question | correct | not_found | wrong | invalid | n |
+|---|---|---|---|---|---|---|
+| NOPAGE | q1_gpu_ondemand | 0 | 12 | 0 | 0 | 12 |
+| NOPAGE | q2_cpu_sandbox_cost | 0 | 12 | 0 | 0 | 12 |
+| NOPAGE | q3_signup | 0 | 11 | 1 | 0 | 12 |
+| NOPAGE | q4_billing | 3 | 9 | 0 | 0 | 12 |
+| NOPAGE | q5_windows | 0 | 12 | 0 | 0 | 12 |
+| A_original | q1_gpu_ondemand | 9 | 0 | 3 | 0 | 12 |
+| C_faq_structured | q1_gpu_ondemand | 12 | 0 | 0 | 0 | 12 |
+
 ### mode: visible_text
 
 | layout | qwen3.5-9b | gpt-oss-20b | gemma4-26b | claude | worst model |

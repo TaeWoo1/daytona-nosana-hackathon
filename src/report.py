@@ -130,7 +130,8 @@ def replay(mode):
 modes = sorted({c["mode"] for c in S["cells"] if c["mode"] != "none"})
 MODE_LABEL = {"html_text": "Reader mode: html_text (all HTML text, incl. hidden tab panel — like a crawler)",
               "visible_text": "Reader mode: visible_text (hidden elements dropped — static approximation of a browser view)",
-              "rendered_text": "Reader mode: rendered_text (real Chromium in the Daytona sandbox, inner_text + click tool) — q1 only, layouts A and C"}
+              "rendered_text": "Reader mode: rendered_text (real Chromium in the Daytona sandbox, inner_text + click tool) on the plain mirror sites (v1) — q1 only, layouts A and C",
+              "rendered_text_v2": "Reader mode: rendered_text on the styled sites (v2: dark theme + pill GPU toggle like the real page) — q1 only, layouts A and C"}
 sections = []
 for mode in modes:
     sections.append(f"""
@@ -152,7 +153,8 @@ for mode in modes:
 sys.path.insert(0, str(ROOT / "src"))
 import grade as _grade  # noqa: E402
 
-RENDERED = [r for r in RUNS if r.get("mode") == "rendered_text" and r.get("run_id")]
+RENDERED = [r for r in RUNS if str(r.get("mode")).startswith("rendered_text") and r.get("run_id")]
+VER_LABEL = {"v1": "v1 plain mirror", "v2": "v2 styled"}
 
 
 def replay_section():
@@ -165,20 +167,21 @@ def replay_section():
                                                       ("invalid" if "invalid" in g["fields"].values() else "not_found"))
         a = r.get("answer") or {}
         data.append({
-            "id": r["run_id"], "model": r["model"], "layout": r["layout"], "rep": r["rep"],
+            "id": r["run_id"], "ver": r.get("site_version", "v1"), "model": r["model"], "layout": r["layout"], "rep": r["rep"],
             "steps": [{"tool": t["name"], "arg": t["path"], "frame": t.get("frame"), "sec": t["sec"],
                        "out": (t["output"] or "")[:400]} for t in r["tool_calls"]],
             "answer": {k: a.get(k) for k in ("usd_per_hour", "pricing_type", "not_found")},
             "quote": str(a.get("evidence_quote", ""))[:200], "verdict": verdict, "latency": r["latency_sec"],
             "fields": g["fields"],
         })
-    pairs = sorted({(d["model"], d["rep"]) for d in data}, key=lambda x: (MODEL_ORDER.index(x[0]) if x[0] in MODEL_ORDER else 9, x[1]))
-    opts = "".join(f'<option value="{m}|{rep}">{html.escape(m)} · rep {rep}</option>' for m, rep in pairs)
+    pairs = sorted({(d["ver"], d["model"], d["rep"]) for d in data},
+                   key=lambda x: (x[0] != "v2", MODEL_ORDER.index(x[1]) if x[1] in MODEL_ORDER else 9, x[2]))
+    opts = "".join(f'<option value="{m}|{rep}|{v}">{VER_LABEL.get(v, v)} · {html.escape(m)} · rep {rep}</option>' for v, m, rep in pairs)
     js_data = json.dumps(data).replace("</", "<\\/")
     return f"""
 <section id="replay"><h2>Replay · rendered_text (real browser in Daytona)</h2>
 <p class="note">q1 "RTX 4090 that won't be interrupted" (gold $0.99/h on-demand). Each frame is a full-page screenshot taken inside the Daytona sandbox after that tool call
-(results/frames/). Pick a model and rep; step through layout A and C side by side.</p>
+(results/frames/). Pick a site version, model and rep; step through layout A and C side by side. v1 = plain mirror HTML, v2 = styled like the real page.</p>
 <label>Run: <select id="rpSel">{opts}</select></label>
 <div class="rpgrid"><div class="rpane" data-layout="A_original"></div><div class="rpane" data-layout="C_faq_structured"></div></div>
 <script>
@@ -205,9 +208,9 @@ function renderPane(pane, run, i) {{
   pane.querySelectorAll("button").forEach(b => b.onclick = () => renderPane(pane, run, i + Number(b.dataset.d)));
 }}
 function show() {{
-  const [m, rep] = document.getElementById("rpSel").value.split("|");
+  const [m, rep, ver] = document.getElementById("rpSel").value.split("|");
   document.querySelectorAll(".rpane").forEach(p => {{
-    const run = RP.find(r => r.model === m && String(r.rep) === rep && r.layout === p.dataset.layout);
+    const run = RP.find(r => r.model === m && String(r.rep) === rep && r.ver === ver && r.layout === p.dataset.layout);
     if (run) renderPane(p, run, 0); else p.innerHTML = "<p class='note'>(no run)</p>";
   }});
 }}

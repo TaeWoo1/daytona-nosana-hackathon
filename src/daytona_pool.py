@@ -16,8 +16,9 @@ RENDER = "/home/daytona/render.py"
 
 
 class Pool:
-    def __init__(self, layouts, workers_per_layout=2, log=print, render=False):
+    def __init__(self, layouts, workers_per_layout=2, log=print, render=False, sites_dir="sites"):
         self.render = render
+        self.sites_dir = sites_dir
         self.d = Daytona()
         self.layouts = layouts
         self.workers = workers_per_layout
@@ -33,7 +34,7 @@ class Pool:
             labels={"project": "agentreadable", "layout": layout, "worker": str(w)},
             ephemeral=True, auto_stop_interval=30,
         ), timeout=120)
-        site = ROOT / "sites" / layout
+        site = ROOT / self.sites_dir / layout
         files = [FileUpload(source=str(p), destination=f"{SITE_DIR}/{p.relative_to(site)}") for p in site.rglob("*.html")]
         files.append(FileUpload(source=str(ROOT / "src/sandbox_extract.py"), destination=EXTRACT))
         files.append(FileUpload(source=str(ROOT / "src/sandbox_render.py"), destination=RENDER))

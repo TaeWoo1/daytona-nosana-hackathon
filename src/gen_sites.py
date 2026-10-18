@@ -167,3 +167,169 @@ for name, body, head in (("A_original", A_BODY, ""), ("B_explicit", B_BODY, ""),
     (d / "index.html").write_text(INDEX)
     (d / "pricing" / "index.html").write_text(page("Pricing | Daytona", body, head))
     print("wrote", d)
+
+# ---- v2 (styled): A and C restyled to look like the real daytona.io/pricing (dark theme, pill GPU toggle, 2-column card).
+# Same facts from gold. No external fonts/CDN/images (Daytona Tier 1 network). v1 above is kept byte-identical.
+CSS2 = """
+*{box-sizing:border-box}
+body{margin:0;background:#0a0a0a;color:#a1a1a1;font-family:Inter,"Helvetica Neue",Arial,sans-serif;font-size:16px;line-height:1.5}
+a{color:inherit;text-decoration:none}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;letter-spacing:.02em}
+nav{display:flex;align-items:center;gap:22px;max-width:1200px;margin:0 auto;padding:18px 24px;color:#fff}
+nav .logo{font-size:24px;font-weight:600;letter-spacing:-.02em}
+nav .sep{color:#666}
+nav .links{display:flex;gap:22px;font-size:14px}
+nav .right{margin-left:auto;display:flex;gap:10px}
+.btn{display:inline-block;padding:8px 18px;border-radius:6px;font-size:14px}
+.btn-signin{background:#0f1f3d;color:#4b8cff}.btn-dark{background:#1f1f1f;color:#fff}
+.hero{text-align:center;padding:90px 24px 80px}
+.hero h1{color:#fff;font-size:64px;font-weight:500;line-height:1.15;letter-spacing:-.02em;margin:0 0 40px}
+.hero .cta{display:flex;justify-content:center;gap:24px}
+.btn-blue{background:#3b82f6;color:#fff;padding:16px 32px;border-radius:4px;font-size:18px}
+.btn-outline{border:1px solid #444;color:#fff;padding:16px 32px;border-radius:4px;font-size:18px}
+.grid{display:grid;grid-template-columns:400px 1fr;max-width:1200px;margin:0 auto;border:1px solid #262626}
+.left{border-right:1px solid #262626}
+.card{padding:26px 30px;border-bottom:1px solid #262626}
+.card:last-child{border-bottom:0}
+.card h2{color:#fff;font-size:20px;font-weight:400;margin:0 0 12px;display:flex;align-items:center;gap:10px}
+.card h2 .ico{display:inline-block;width:20px;height:20px;border:2px solid #fff;border-radius:3px}
+.row{display:flex;justify-content:space-between;font-size:18px;margin:6px 0}
+.row p{margin:0}.row .v{color:#a1a1a1}
+.note{font-size:13px;color:#737373;margin-top:8px}
+.gpuhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.gpuhead h2{margin:0}
+.pill{display:flex;border:1px solid #333;border-radius:10px;padding:4px}
+.pill button{background:transparent;border:0;color:#8a8a8a;font:inherit;font-size:16px;padding:8px 14px;border-radius:7px;cursor:pointer}
+.pill button[aria-selected=true]{background:#1c1c1c;color:#fff;box-shadow:0 0 0 1px #333}
+.gpucols{display:flex;justify-content:space-between;font-size:12px;color:#737373;margin-bottom:6px}
+.right-col{padding:44px}
+.right-col h2{color:#fff;font-size:46px;font-weight:400;letter-spacing:-.01em;margin:0 0 26px}
+.right-col p{font-size:20px;margin:0}.right-col .hl{color:#fff}
+.sec{max-width:1200px;margin:0 auto;padding:40px 24px}
+.sec h2,.sec h3{color:#fff;font-weight:400}
+.sec ul{padding-left:20px}
+.faq h3{font-size:18px;margin:22px 0 6px}.faq p{margin:0}
+footer{max-width:1200px;margin:0 auto;padding:40px 24px;color:#666;font-size:13px}
+"""
+
+NAV2 = """<nav><a class="logo" href="/">Daytona</a><span class="sep">/</span>
+<div class="links mono"><a href="/docs">DOCS</a><a href="/customers">CUSTOMERS</a><a href="/pricing">PRICING</a><a href="/startups">STARTUPS</a><a href="/blog">BLOG</a></div>
+<div class="right mono"><a class="btn btn-signin" href="/signin">Sign in</a><a class="btn btn-dark" href="/contact">Contact us</a></div></nav>"""
+
+HERO2 = """<header class="hero"><h1>Build for free,<br>pay as you scale.</h1>
+<div class="cta mono"><a class="btn-blue" href="/signup">Start for free</a><a class="btn-outline" href="/contact">Contact Sales</a></div></header>"""
+
+RIGHT2 = f"""<div class="right-col"><h2>Instant Sandboxes. Pay-as-You-Go.</h2>
+<p>Daytona lets you spin up sandboxes in milliseconds and shut them down just as fast.</p>
+<p>Use what you need, when you need it. <span class="hl">${F['free_compute_credit_usd']} in free compute included.</span></p></div>"""
+
+BOTTOM2 = f"""<section class="sec">
+  <p>All billing is calculated per second.</p>
+  <ul><li>Sign up for a free trial - no credit card required</li><li>Pay as you go with usage-based pricing</li><li>Unlock volume discounts as you scale</li></ul>
+  <h3>Start-ups</h3>
+  <p>Daytona supports startups with up to ${F['startup_program_max_credits_usd'] // 1000}k in credits for free.</p>
+  <a class="mono" href="/startups">Sign up for credits</a>
+  <h3>Enterprise</h3>
+  <p>Designed for businesses that need larger limits, SSO, audit logs, or BYOC</p>
+  <a class="mono" href="/contact">Contact Sales</a>
+</section>
+<footer class="mono">COMPANY &nbsp; <a href="/about">About</a> &nbsp; <a href="/careers">Careers</a></footer>"""
+
+
+def page2(title, body, head_extra=""):
+    return f"""<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{title}</title>
+<style>{CSS2}</style>
+{head_extra}</head><body>
+{NAV2}
+{body}
+</body></html>
+"""
+
+
+def gpu_rows2(kind):
+    return "\n".join(
+        f'<div class="row"><p>{GPU_NAMES[k]}</p><p class="v">${GPU[k][kind]:.2f}/h</p></div>' for k in GPU_ORDER
+    )
+
+
+# A v2: like the real page, the GPU panels carry no visible heading (only aria-label); the pill toggle's
+# highlight is the only on-screen cue for which price set is shown. On-demand panel hidden until clicked.
+A2_BODY = f"""{HERO2}
+<div class="grid"><div class="left">
+  <div class="card"><h2><span class="ico"></span>Compute</h2>
+    <div class="row"><p>vCPU</p><p class="v">${F['vcpu_usd_per_hour']}/h</p></div></div>
+  <div class="card"><div class="gpuhead"><h2><span class="ico"></span>GPU</h2>
+    <div class="pill" role="tablist">
+      <button role="tab" aria-selected="true" id="tab-pre" aria-controls="panel-pre">Preemptible</button>
+      <button role="tab" aria-selected="false" id="tab-od" aria-controls="panel-od">On-demand</button>
+    </div></div>
+    <div role="tabpanel" id="panel-pre" aria-labelledby="tab-pre" aria-label="Preemptible GPU prices per hour">
+{gpu_rows2('preemptible')}
+    </div>
+    <div role="tabpanel" id="panel-od" aria-labelledby="tab-od" aria-label="On-demand GPU prices per hour" hidden style="display: none; height: 0px; overflow: hidden;">
+{gpu_rows2('on_demand')}
+    </div></div>
+  <div class="card"><h2><span class="ico"></span>Memory</h2>
+    <div class="row"><p>GiB</p><p class="v">${F['memory_usd_per_gib_hour']}/h</p></div></div>
+  <div class="card"><h2><span class="ico"></span>Storage</h2>
+    <div class="row"><p>GiB<sup>*</sup></p><p class="v">${F['storage_usd_per_gib_hour']}/h</p></div></div>
+  <div class="card"><h2><span class="ico"></span>OS</h2>
+    <div class="row"><p>Windows</p><p class="v">${F['windows_usd_per_vcpu_hour']}/vCPU/h</p></div></div>
+</div>
+{RIGHT2}
+</div>
+<p class="sec note">* Price per GiB after first {F['storage_free_gib']} free</p>
+{BOTTOM2}
+<script>
+document.querySelectorAll('[role=tab]').forEach(function (tab) {{
+  tab.addEventListener('click', function () {{
+    document.querySelectorAll('[role=tab]').forEach(function (t) {{
+      var panel = document.getElementById(t.getAttribute('aria-controls'));
+      var on = t === tab;
+      t.setAttribute('aria-selected', on ? 'true' : 'false');
+      if (on) {{ panel.removeAttribute('hidden'); panel.style.cssText = ''; }}
+      else {{ panel.setAttribute('hidden', ''); panel.style.cssText = 'display: none; height: 0px; overflow: hidden;'; }}
+    }});
+  }});
+}});
+</script>
+"""
+
+# C v2: same design; both GPU prices visible with explicit labels; storage free tier next to the price; FAQ + JSON-LD.
+gpu_rows_both = "\n".join(
+    f'<div class="row"><p>{GPU_NAMES[k]}</p><p class="v">${GPU[k]["preemptible"]:.2f}/h &nbsp;|&nbsp; ${GPU[k]["on_demand"]:.2f}/h</p></div>'
+    for k in GPU_ORDER
+)
+C2_BODY = f"""{HERO2}
+<div class="grid"><div class="left">
+  <div class="card"><h2><span class="ico"></span>Compute</h2>
+    <div class="row"><p>vCPU</p><p class="v">${F['vcpu_usd_per_hour']} per vCPU per hour</p></div></div>
+  <div class="card"><h2><span class="ico"></span>GPU prices ($ per hour)</h2>
+    <div class="gpucols"><span>GPU</span><span>Preemptible (may be interrupted) | On-demand (not interrupted)</span></div>
+{gpu_rows_both}
+  </div>
+  <div class="card"><h2><span class="ico"></span>Memory</h2>
+    <div class="row"><p>GiB</p><p class="v">${F['memory_usd_per_gib_hour']} per GiB per hour</p></div></div>
+  <div class="card"><h2><span class="ico"></span>Storage (disk)</h2>
+    <div class="row"><p>GiB</p><p class="v">${F['storage_usd_per_gib_hour']} per GiB per hour</p></div>
+    <p class="note">The first {F['storage_free_gib']} GiB are free; you pay only for storage above {F['storage_free_gib']} GiB.</p></div>
+  <div class="card"><h2><span class="ico"></span>Windows OS</h2>
+    <div class="row"><p>Windows</p><p class="v">${F['windows_usd_per_vcpu_hour']} per vCPU per hour</p></div></div>
+</div>
+{RIGHT2}
+</div>
+<section class="sec faq"><h2>Pricing FAQ</h2>
+{faq_html}
+</section>
+{BOTTOM2}
+"""
+
+INDEX2 = page2("Daytona", '<header class="hero"><h1>Daytona</h1><p>Secure and elastic infrastructure for running AI-generated code.</p><a class="btn-blue mono" href="/pricing">Pricing</a></header>')
+
+for name, body, head in (("A_original", A2_BODY, ""), ("C_faq_structured", C2_BODY, C_HEAD)):
+    d = ROOT / "sites_v2" / name
+    (d / "pricing").mkdir(parents=True, exist_ok=True)
+    (d / "index.html").write_text(INDEX2)
+    (d / "pricing" / "index.html").write_text(page2("Pricing | Daytona", body, head))
+    print("wrote", d)

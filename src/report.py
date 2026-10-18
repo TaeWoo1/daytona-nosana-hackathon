@@ -12,7 +12,10 @@ ROOT = Path(__file__).resolve().parent.parent
 S = json.loads((ROOT / "results/summary.json").read_text())
 G = [json.loads(l) for l in open(ROOT / "results/graded.jsonl")]
 RUN_FILES = sys.argv[1:] or [str(ROOT / "results/runs.jsonl")]
-RUNS = [json.loads(l) for f in RUN_FILES for l in open(f) if l.strip()]
+RUNS = [{**json.loads(l), "_set": Path(f).stem} for f in RUN_FILES for l in open(f) if l.strip()]
+for _r in RUNS:  # the earlier v2 batch (n=3) is kept but reported separately from the headline v2 batch (n10 file)
+    if _r["_set"] == "runs_rendered_v2":
+        _r["mode"] = "rendered_text_v2_n3"
 
 LAYOUT_LABEL = {"A_original": "A · original (tabs)", "B_explicit": "B · explicit table",
                 "C_faq_structured": "C · B + FAQ + JSON-LD", "NOPAGE": "No page (memory)"}
@@ -110,7 +113,7 @@ def replay(mode):
     cols = []
     for l in ("A_original", "C_faq_structured"):
         r = next((r for r in RUNS if r["model"] == m and r["layout"] == l and r["question"] == "q1_gpu_ondemand"
-                  and r["mode"] == mode), None)
+                  and r["mode"] == mode and (not r.get("error") or "XML syntax error" in r["error"])), None)
         if not r:
             continue
         steps = "".join(f'<li><code>open_page("{html.escape(t["path"])}")</code> → {len(t["output"] or "")} chars, '
@@ -131,7 +134,8 @@ modes = sorted({c["mode"] for c in S["cells"] if c["mode"] != "none"})
 MODE_LABEL = {"html_text": "Reader mode: html_text (all HTML text, incl. hidden tab panel — like a crawler)",
               "visible_text": "Reader mode: visible_text (hidden elements dropped — static approximation of a browser view)",
               "rendered_text": "Reader mode: rendered_text (real Chromium in the Daytona sandbox, inner_text + click tool) on the plain mirror sites (v1) — q1 only, layouts A and C",
-              "rendered_text_v2": "Reader mode: rendered_text on the styled sites (v2: dark theme + pill GPU toggle like the real page) — q1 only, layouts A and C"}
+              "rendered_text_v2_n3": "Reader mode: rendered_text on the styled sites (v2), first batch n=3 per cell — kept for reference",
+              "rendered_text_v2": "Reader mode: rendered_text on the styled sites (v2: dark theme + pill GPU toggle like the real page) — HEADLINE batch, q1 only, A n=10 / C n=5 per model"}
 sections = []
 for mode in modes:
     sections.append(f"""
@@ -153,8 +157,10 @@ for mode in modes:
 sys.path.insert(0, str(ROOT / "src"))
 import grade as _grade  # noqa: E402
 
-RENDERED = [r for r in RUNS if str(r.get("mode")).startswith("rendered_text") and r.get("run_id")]
-VER_LABEL = {"v1": "v1 plain mirror", "v2": "v2 styled"}
+RENDERED = [r for r in RUNS if str(r.get("mode")).startswith("rendered_text") and r.get("run_id")
+            and (not r.get("error") or "XML syntax error" in r["error"]) and not any("render.py" in (t.get("output") or "") and "Traceback" in (t.get("output") or "")
+                for t in r.get("tool_calls", []))]
+VER_LABEL = {"v1": "v1 plain mirror", "v2": "v2 styled n=3", "v2·n10": "v2 styled, headline batch (A n=10, C n=5)"}
 
 
 def replay_section():
@@ -167,7 +173,7 @@ def replay_section():
                                                       ("invalid" if "invalid" in g["fields"].values() else "not_found"))
         a = r.get("answer") or {}
         data.append({
-            "id": r["run_id"], "ver": r.get("site_version", "v1"), "model": r["model"], "layout": r["layout"], "rep": r["rep"],
+            "id": r["run_id"], "ver": r.get("site_version", "v1") + ("·n10" if r.get("_set") == "runs_rendered_v2_n10" else ""), "model": r["model"], "layout": r["layout"], "rep": r["rep"],
             "steps": [{"tool": t["name"], "arg": t["path"], "frame": t.get("frame"), "sec": t["sec"],
                        "out": (t["output"] or "")[:400]} for t in r["tool_calls"]],
             "answer": {k: a.get(k) for k in ("usd_per_hour", "pricing_type", "not_found")},
@@ -175,14 +181,28 @@ def replay_section():
             "fields": g["fields"],
         })
     pairs = sorted({(d["ver"], d["model"], d["rep"]) for d in data},
-                   key=lambda x: (x[0] != "v2", MODEL_ORDER.index(x[1]) if x[1] in MODEL_ORDER else 9, x[2]))
-    opts = "".join(f'<option value="{m}|{rep}|{v}">{VER_LABEL.get(v, v)} · {html.escape(m)} · rep {rep}</option>' for v, m, rep in pairs)
+                   key=lambda x: ({"v2·n10": 0, "v2": 1}.get(x[0], 2), MODEL_ORDER.index(x[1]) if x[1] in MODEL_ORDER else 9, x[2]))
+    # featured defaults (headline batch): gpt-oss with A wrong + C correct, Claude with A clicked -> correct
+    by = {(d["ver"], d["model"], d["rep"], d["layout"]): d for d in data}
+
+    def feat(model, ok):
+        for v, m, rp in pairs:
+            a, c = by.get((v, m, rp, "A_original")), by.get((v, m, rp, "C_faq_structured"))
+            if v == "v2·n10" and m == model and a and c and ok(a, c):
+                return (v, m, rp)
+    featured = [f for f in (feat("gpt-oss-20b", lambda a, c: a["verdict"] == "wrong" and c["verdict"] == "correct"),
+                            feat("claude", lambda a, c: a["verdict"] == "correct" and any(st["tool"] == "click" for st in a["steps"])))
+                if f]
+    label = {"gpt-oss-20b": "A wrong, C correct", "claude": "A clicked → correct"}
+    opts = "".join(f'<option value="{m}|{rep}|{v}">★ {html.escape(m)} · rep {rep} · {label[m]} ({VER_LABEL.get(v, v)})</option>'
+                   for v, m, rep in featured)
+    opts += "".join(f'<option value="{m}|{rep}|{v}">{VER_LABEL.get(v, v)} · {html.escape(m)} · rep {rep}</option>' for v, m, rep in pairs)
     js_data = json.dumps(data).replace("</", "<\\/")
     return f"""
 <section id="replay"><h2>Replay · rendered_text (real browser in Daytona)</h2>
 <p class="note">q1 "RTX 4090 that won't be interrupted" (gold $0.99/h on-demand). Each frame is a full-page screenshot taken inside the Daytona sandbox after that tool call
 (results/frames/). Pick a site version, model and rep; step through layout A and C side by side. v1 = plain mirror HTML, v2 = styled like the real page.</p>
-<label>Run: <select id="rpSel">{opts}</select></label>
+<label>Run: <select id="rpSel">{opts}</select></label> <button id="rpPlay">▶ Autoplay</button>
 <div class="rpgrid"><div class="rpane" data-layout="A_original"></div><div class="rpane" data-layout="C_faq_structured"></div></div>
 <script>
 const RP = {js_data};
@@ -201,7 +221,8 @@ function renderPane(pane, run, i) {{
     ? `<pre>${{esc(run.steps[i].out)}}</pre>`
     : `<p><b>Answer:</b> ${{esc(JSON.stringify(run.answer))}}</p><p class="quote">“${{esc(run.quote)}}”</p>
        <p><span class="tag ${{run.verdict}}">${{run.verdict}}</span> <small>fields: ${{esc(JSON.stringify(run.fields))}} · ${{run.latency}}s total</small></p>`;
-  pane.innerHTML = `<h4>${{LBL[run.layout]}} <span class="tag ${{run.verdict}}">${{run.verdict}}</span></h4>
+  const big = i === n ? " big" : "";
+  pane.innerHTML = `<h4>${{LBL[run.layout]}} <span class="tag ${{run.verdict}}${{big}}">${{run.verdict}}</span></h4>
     <div class="rpin"><div class="frame">${{frame ? `<a href="${{esc(frame)}}" target="_blank" title="open full size"><img src="${{esc(frame)}}" alt="screenshot step ${{i + 1}}"></a>` : '<p class="note">(no frame)</p>'}}</div>
     <div class="steps"><div class="nav"><button data-d="-1">◀ prev</button> step ${{i + 1}}/${{n + 1}} <button data-d="1">next ▶</button></div>
     <ol>${{list}}</ol>${{detail}}</div></div>`;
@@ -214,7 +235,29 @@ function show() {{
     if (run) renderPane(p, run, 0); else p.innerHTML = "<p class='note'>(no run)</p>";
   }});
 }}
-document.getElementById("rpSel").onchange = show; show();
+let timer = null;
+function stopPlay() {{ if (timer) clearInterval(timer); timer = null; document.getElementById("rpPlay").textContent = "▶ Autoplay"; }}
+function autoplay() {{
+  if (timer) return stopPlay();
+  show();  // both panes back to step 1
+  document.getElementById("rpPlay").textContent = "■ Stop";
+  timer = setInterval(() => {{
+    let moving = false;
+    document.querySelectorAll(".rpane").forEach(p => {{
+      const run = currentRun(p);
+      if (!run) return;
+      const i = Number(p.dataset.i);
+      if (i < run.steps.length) {{ renderPane(p, run, i + 1); moving = true; }}
+    }});
+    if (!moving) stopPlay();
+  }}, 1500);
+}}
+function currentRun(p) {{
+  const [m, rep, ver] = document.getElementById("rpSel").value.split("|");
+  return RP.find(r => r.model === m && String(r.rep) === rep && r.ver === ver && r.layout === p.dataset.layout);
+}}
+document.getElementById("rpSel").onchange = () => {{ stopPlay(); show(); }};
+document.getElementById("rpPlay").onclick = autoplay; show();
 </script>
 </section>"""
 
@@ -244,6 +287,8 @@ section{{background:var(--card);border:1px solid var(--line);border-radius:10px;
 .rpin{{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:10px}} .frame{{max-height:560px;overflow:auto;border:1px solid var(--line);border-radius:6px;background:#fff}}
 .frame img{{width:100%;display:block}} .steps ol{{padding-left:20px;font-size:13px}} .steps li.cur{{font-weight:700;background:var(--empty);border-radius:4px}}
 .steps pre{{white-space:pre-wrap;font-size:11px;max-height:300px;overflow:auto;background:var(--empty);padding:6px;border-radius:4px}}
+.tag.big{{font-size:20px;padding:4px 14px;box-shadow:0 0 0 4px var(--fg)}}
+#rpPlay{{font:inherit;padding:4px 12px;cursor:pointer;margin-left:8px}}
 .nav button{{font:inherit;padding:2px 8px;cursor:pointer}} .tag.correct{{background:hsl(130 55% 38%)}} .tag.wrong{{background:hsl(0 65% 48%)}} .tag.not_found{{background:hsl(40 80% 45%)}} .tag.invalid{{background:#888}}
 @media (max-width:1000px){{.rpgrid{{grid-template-columns:1fr}}}}
 @media (max-width:700px){{.rpin{{grid-template-columns:1fr}} .rps{{grid-template-columns:1fr}} .bl{{width:110px}} .cell{{font-size:14px}}}}
@@ -283,5 +328,20 @@ for mode in modes:
                       f"{b.get('wrong',0)} | {b.get('invalid',0)} | {b['n_runs']} |")
     md.append("")
 md.append(f"Excluded infra errors: {S.get('excluded_infra_errors')}")
+md.append("")
+md.append("### Browser behaviour (rendered_text runs): click vs outcome, per run set × layout × model")
+md.append("")
+if S.get("behavior_headline"):
+    md.append(f"**{S['behavior_headline']}**")
+    md.append("")
+md.append("Each cell is k/n (rate). confident_wrong = a value was asserted and it was wrong.")
+md.append("")
+md.append("| run set | layout | model | click | correct | confident_wrong | not_found | invalid | correct given clicked | correct given no click |")
+md.append("|---|---|---|---|---|---|---|---|---|---|")
+fr = lambda x: f"{x['k']}/{x['n']} ({x['rate']*100:.0f}%)" if x["n"] else "0/0 (–)"  # noqa: E731
+for b_ in S.get("behavior", []):
+    md.append(f"| {b_['run_set']} | {b_['layout']} | {b_['model']} | " + " | ".join(fr(b_[k]) for k in (
+        "click_rate", "correct_rate", "confident_wrong_rate", "not_found_rate", "invalid_rate",
+        "correct_given_clicked", "correct_given_no_click")) + " |")
 (ROOT / "results/results_table.md").write_text("\n".join(md))
 print("wrote results/results_table.md")

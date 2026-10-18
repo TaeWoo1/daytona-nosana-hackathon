@@ -56,7 +56,8 @@ def grade(r):
                                  "latency_sec", "error")},
             "usage": r.get("usage"), "fields": fields, "acc": n_ok / len(fields),
             "all_correct": n_ok == len(fields), "any_wrong": any(v == "wrong" for v in fields.values()),
-            "evidence_reach": reach}
+            "evidence_reach": reach, "run_set": r.get("run_set"),
+            "clicked": any(t["name"] == "click" for t in r.get("tool_calls", []))}
 
 
 def summarize(g):
@@ -107,16 +108,71 @@ def summarize(g):
                                    "worst_model_accuracy": w["field_accuracy"],
                                    "mean_accuracy": round(statistics.mean(c["field_accuracy"] for c in cs), 4),
                                    "n_models": len(cs), "n_runs_per_model": [c["n_runs"] for c in cs]})
+    out["behavior"] = behavior(g)
+    out["behavior_headline"] = headline(out["behavior"])
     return out
+
+
+def headline(rows, run_set="runs_rendered_v2_n10"):
+    """One sentence from the headline batch's actual numbers (no hand-typed figures)."""
+    get = {(r["run_set"], r["layout"], r["model"]): r for r in rows}
+    a, c = get.get((run_set, "A_original", "ALL")), get.get((run_set, "C_faq_structured", "ALL"))
+    if not a or not c:
+        return None
+    f = lambda x: f"{x['k']}/{x['n']}"  # noqa: E731
+    return (f"Real browser in Daytona, styled page, q1: on the original tabbed layout A, agents that clicked the On-demand tab "
+            f"were fully correct {f(a['correct_given_clicked'])}, agents that didn't click {f(a['correct_given_no_click'])}; "
+            f"A overall {f(a['correct_rate'])} correct with {f(a['confident_wrong_rate'])} confident wrong answers, "
+            f"while the explicit layout C was {f(c['correct_rate'])} correct.")
+
+
+def outcome(x):
+    return "correct" if x["all_correct"] else ("confident_wrong" if x["any_wrong"] else
+                                               ("invalid" if "invalid" in x["fields"].values() else "not_found"))
+
+
+def rate(k, n):
+    return {"k": k, "n": n, "rate": round(k / n, 4) if n else None}
+
+
+def behavior(g):
+    """Rendered (browser + click) runs: per run set (source file) x layout x model (+ ALL pooled):
+    click / correct / confident_wrong / not_found / invalid rates, and correct rate given clicked vs not clicked."""
+    groups = defaultdict(list)
+    for x in g:
+        if str(x["mode"]).startswith("rendered_text"):
+            groups[(x["run_set"], x["layout"], x["model"])].append(x)
+            groups[(x["run_set"], x["layout"], "ALL")].append(x)
+    rows = []
+    for (rs, l, m), xs in sorted(groups.items()):
+        n = len(xs)
+        oc = [outcome(x) for x in xs]
+        cl = [x for x in xs if x["clicked"]]
+        nc = [x for x in xs if not x["clicked"]]
+        rows.append({"run_set": rs, "mode": xs[0]["mode"], "layout": l, "model": m, "n_runs": n,
+                     "batches": sorted({x["batch"] for x in xs}),
+                     "click_rate": rate(len(cl), n),
+                     "correct_rate": rate(oc.count("correct"), n),
+                     "confident_wrong_rate": rate(oc.count("confident_wrong"), n),
+                     "not_found_rate": rate(oc.count("not_found"), n),
+                     "invalid_rate": rate(oc.count("invalid"), n),
+                     "correct_given_clicked": rate(sum(x["all_correct"] for x in cl), len(cl)),
+                     "correct_given_no_click": rate(sum(x["all_correct"] for x in nc), len(nc))})
+    return rows
 
 
 def main():
     files = sys.argv[1:] or [str(ROOT / "results/runs.jsonl")]
-    runs = [json.loads(l) for f in files for l in open(f) if l.strip()]
+    runs = [{**json.loads(l), "run_set": Path(f).stem} for f in files for l in open(f) if l.strip()]
+    for r in runs:  # the earlier v2 batch (n=3) is kept but summarized separately from the headline v2 batch (n10 file)
+        if r["run_set"] == "runs_rendered_v2":
+            r["mode"] = "rendered_text_v2_n3"
     # API/infra failures (e.g. 429 no credits, timeouts) are not reader mistakes: excluded and counted separately
     # a malformed tool call rejected by the Ollama server (HTTP 500 "XML syntax error") IS a reader failure -> graded as invalid
     def is_infra(r):
-        return bool(r.get("error")) and "XML syntax error" not in r["error"]
+        # Chromium failing to launch in an overloaded sandbox (render.py traceback) is infra too, not a reader mistake
+        crash = any("render.py" in (t.get("output") or "") and "Traceback" in (t.get("output") or "") for t in r.get("tool_calls", []))
+        return crash or (bool(r.get("error")) and "XML syntax error" not in r["error"])
     infra = [r for r in runs if is_infra(r)]
     runs = [r for r in runs if not is_infra(r)]
     g = [grade(r) for r in runs]
@@ -126,7 +182,7 @@ def main():
     s = summarize(g)
     ie = defaultdict(int)
     for r in infra:
-        ie[f"{r['model']}: {r['error'].split(':')[0]}"] += 1
+        ie[f"{r['model']}: {(r.get('error') or 'BrowserLaunchCrash (render.py traceback)').split(':')[0]}"] += 1
     s["excluded_infra_errors"] = dict(ie)
     s["source_files"] = [str(Path(f).relative_to(ROOT)) if Path(f).is_absolute() else f for f in files]
     (ROOT / "results/summary.json").write_text(json.dumps(s, indent=1))

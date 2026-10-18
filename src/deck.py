@@ -11,8 +11,12 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 S = json.loads((ROOT / "results/summary.json").read_text())
 RUN_FILES = sys.argv[1:] or [str(ROOT / "results/runs.jsonl")]
-RUNS = [json.loads(l) for f in RUN_FILES for l in open(f) if l.strip()]
-OK_RUNS = [r for r in RUNS if not r.get("error") or "XML syntax error" in r["error"]]
+RUNS = [{**json.loads(l), "_set": Path(f).stem} for f in RUN_FILES for l in open(f) if l.strip()]
+for _r in RUNS:  # earlier v2 batch (n=3) kept but not used for the headline
+    if _r["_set"] == "runs_rendered_v2":
+        _r["mode"] = "rendered_text_v2_n3"
+OK_RUNS = [r for r in RUNS if not r.get("error") or "XML syntax error" in r["error"]
+           and not any("render.py" in (t.get("output") or "") and "Traceback" in (t.get("output") or "") for t in r.get("tool_calls", []))]
 
 LL = {"A_original": "A · original (tabs)", "B_explicit": "B · explicit table", "C_faq_structured": "C · + FAQ + JSON-LD",
       "NOPAGE": "No page (memory)"}
@@ -126,11 +130,11 @@ slides.append("""<section><h2>Method and metrics</h2>
 <li>Per run: each field is graded <b>correct / not found / wrong / invalid</b>. A confident wrong value is worse than "not found".</li>
 <li><b>Field accuracy</b>, <b>evidence reach</b> (did the gold text appear in the tool output?), and the headline <b>worst-model accuracy per layout</b>.</li>
 <li>3 reps per cell. Small n, so we say "in these runs", not "proven".</li></ul></section>""")
-for mode in modes[::-1]:
+for mode in [m for m in modes[::-1] if m not in ("rendered_text", "rendered_text_v2_n3")]:
     slides.append(f"""<section><h2>q1 "won't be interrupted" · {mode}</h2>{strict_q(mode, "q1_gpu_ondemand")}
 <p class="note">Cell = fully correct runs / runs (gold $0.99/h on-demand); "wrong" = runs with a confident wrong value. Source: results/summary.json (cells_by_question).</p></section>""")
 RENDER_VER = {"rendered_text": ("v1 plain mirror", "results/runs_rendered.jsonl", ("700", "520", "660", "80")),
-              "rendered_text_v2": ("v2 styled", "results/runs_rendered_v2.jsonl", ("400", "400", "625", "0"))}
+              "rendered_text_v2": ("v2 styled, A n=10 / C n=5", "results/runs_rendered_v2_n10.jsonl", ("400", "400", "625", "0"))}
 for rmode in [m for m in RENDER_VER if m in modes]:
     ver_label, src_file, (ch, cw, cy, cx) = RENDER_VER[rmode]
     sys.path.insert(0, str(ROOT / "src"))
@@ -166,7 +170,8 @@ for rmode in [m for m in RENDER_VER if m in modes]:
 <div><table class="ct"><tr><th>model</th><th>clicked On-demand tab</th><th>fully correct | clicked</th><th>fully correct | no click</th></tr>{"".join(rows)}</table>
 <p>Chromium runs inside the Daytona sandbox (Playwright). The reader can <code>click(text)</code>; each step is screenshotted.
 Agents that clicked the tab could read $0.99. Agents that didn't, couldn't.</p></div><div>{frames}</div></div>
-<p class="note">q1 only, layout A, 3 reps per model. Source: {src_file} graded by src/grade.py.</p></section>""")
+{f'<p class="hl">{html.escape(S["behavior_headline"])}</p>' if rmode == "rendered_text_v2" and S.get("behavior_headline") else ""}
+<p class="note">q1 only, layout A, {"10" if rmode == "rendered_text_v2" else "3"} reps per model. Source: {src_file} graded by src/grade.py.</p></section>""")
 for mode in [m for m in modes if not m.startswith("rendered_text")]:
     slides.append(f"""<section><h2>All 5 questions · {mode}</h2>{heat(mode)}
 <p class="note">Cell = mean share of answer fields matching gold. n = runs (5 questions × 3 reps). Outlined column = weakest model per layout. Source: results/summary.json.</p></section>""")
@@ -206,7 +211,7 @@ h1{{font-size:72px;margin:120px 0 20px}} h2{{font-size:40px;margin:0 0 24px}} .b
 .tr{{flex:1;display:flex;height:24px;border-radius:4px;overflow:hidden;background:#eee}} .s{{display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:13px}}
 .ct{{border-collapse:collapse;font-size:18px;margin-bottom:12px}} .ct td,.ct th{{border:1px solid #ccc;padding:4px 8px;text-align:center}}
 .frames{{display:grid;grid-template-columns:1fr 1fr;gap:8px}} .frames figure{{margin:0}} .frames img{{width:100%;border:1px solid #ccc}}
-.frames figcaption{{font-size:13px;color:#666}} .note2{{font-size:13px;color:#666}}
+.frames figcaption{{font-size:13px;color:#666}} .note2{{font-size:13px;color:#666}} .hl{{font-size:17px;font-weight:600;margin:8px 0 0}}
 .correct{{background:hsl(130 55% 36%)}} .not_found{{background:hsl(40 80% 45%)}} .wrong{{background:hsl(0 65% 48%)}} .invalid{{background:#888}} .lg .s{{padding:2px 10px;margin-right:6px}} .tag{{color:#fff;border-radius:4px;padding:1px 8px;font-size:16px;margin-left:6px}} .ok{{background:hsl(130 55% 36%)}} .bad{{background:hsl(0 65% 48%)}}
 </style></head><body>{''.join(slides)}</body></html>"""
 (ROOT / "deck").mkdir(exist_ok=True)

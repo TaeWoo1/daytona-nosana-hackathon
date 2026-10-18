@@ -1,0 +1,27 @@
+[batch 163227-69e7] models=['qwen3.5-9b', 'gpt-oss-20b', 'gemma4-26b', 'claude'] layouts=['C_faq_structured'] questions=['q1_gpu_ondemand'] reps=5 mode=rendered_text_v2
+[sandbox] C_faq_structured/w1 ready id=aa23f03d in 5.7s
+[sandbox] C_faq_structured/w0 ready id=7ae2b9d8 in 6.9s
+[batch 163227-69e7] 2 sandboxes up in 6.9s
+[  1/20] gemma4-26b   C_faq_structured q1_gpu_ondemand      rep0 tools=1  23.5s  {"usd_per_hour": 0.99, "pricing_type": "on_demand", "evidence_quote": "On-demand RTX 4090 
+[  2/20] gemma4-26b   C_faq_structured q1_gpu_ondemand      rep3 tools=1  28.6s  {"usd_per_hour": 0.99, "pricing_type": "on_demand", "evidence_quote": "On-demand RTX 4090 
+[sandbox] screenshot download failed: DaytonaFileNotFoundError
+[sandbox] screenshot download failed: DaytonaFileNotFoundError
+[  3/20] claude       C_faq_structured q1_gpu_ondemand      rep1 tools=1  61.7s  {"usd_per_hour": null, "pricing_type": "unknown", "evidence_quote": "", "not_found": true}
+[  4/20] claude       C_faq_structured q1_gpu_ondemand      rep3 tools=0  61.9s  DaytonaProcessExecutionTimeoutError: Failed to execute command: command execution timeout
+[  5/20] claude       C_faq_structured q1_gpu_ondemand      rep2 tools=0  62.6s  DaytonaProcessExecutionTimeoutError: Failed to execute command: command execution timeout
+[  6/20] claude       C_faq_structured q1_gpu_ondemand      rep0 tools=1  63.0s  {"usd_per_hour": null, "pricing_type": "unknown", "evidence_quote": "", "not_found": true}
+[  7/20] gpt-oss-20b  C_faq_structured q1_gpu_ondemand      rep2 tools=0  63.5s  DaytonaProcessExecutionTimeoutError: Failed to execute command: command execution timeout
+[  8/20] gpt-oss-20b  C_faq_structured q1_gpu_ondemand      rep0 tools=0  64.2s  DaytonaProcessExecutionTimeoutError: Failed to execute command: command execution timeout
+[  9/20] gpt-oss-20b  C_faq_structured q1_gpu_ondemand      rep3 tools=0  64.8s  DaytonaProcessExecutionTimeoutError: Failed to execute command: command execution timeout
+[ 10/20] gpt-oss-20b  C_faq_structured q1_gpu_ondemand      rep1 tools=0  65.1s  DaytonaProcessExecutionTimeoutError: Failed to execute command: command execution timeout
+[ 11/20] qwen3.5-9b   C_faq_structured q1_gpu_ondemand      rep1 tools=0  68.9s  DaytonaProcessExecutionTimeoutError: Failed to execute command: command execution timeout
+[ 12/20] gemma4-26b   C_faq_structured q1_gpu_ondemand      rep1 tools=0  69.3s  DaytonaProcessExecutionTimeoutError: Failed to execute command: command execution timeout
+[ 13/20] gemma4-26b   C_faq_structured q1_gpu_ondemand      rep2 tools=0  70.1s  DaytonaProcessExecutionTimeoutError: Failed to execute command: command execution timeout
+[ 14/20] claude       C_faq_structured q1_gpu_ondemand      rep4 tools=1   8.9s  {"usd_per_hour": 0.99, "pricing_type": "on_demand", "evidence_quote": "On-demand RTX 4090 
+[ 15/20] qwen3.5-9b   C_faq_structured q1_gpu_ondemand      rep2 tools=0  70.8s  DaytonaProcessExecutionTimeoutError: Failed to execute command: command execution timeout
+[ 16/20] qwen3.5-9b   C_faq_structured q1_gpu_ondemand      rep0 tools=1  72.8s  DaytonaProcessExecutionTimeoutError: Failed to execute command: command execution timeout
+[ 17/20] gpt-oss-20b  C_faq_structured q1_gpu_ondemand      rep4 tools=1  17.9s  {"usd_per_hour": 0.99, "pricing_type": "on_demand", "evidence_quote": "On-demand RTX 4090 
+[ 18/20] gemma4-26b   C_faq_structured q1_gpu_ondemand      rep4 tools=1  61.5s  {"usd_per_hour": 0.99, "pricing_type": "on_demand", "evidence_quote": "On-demand RTX 4090 
+[ 19/20] qwen3.5-9b   C_faq_structured q1_gpu_ondemand      rep3 tools=4  96.7s  {"usd_per_hour": 0.99, "pricing_type": "on_demand", "evidence_quote": "On-demand RTX 4090 
+[ 20/20] qwen3.5-9b   C_faq_structured q1_gpu_ondemand      rep4 tools=4  31.0s  {"usd_per_hour": 0.99, "pricing_type": "on_demand", "evidence_quote": "On-demand RTX 4090 
+[batch 163227-69e7] done 20 runs in 106.9s -> results/runs_rendered_v2_n10.jsonl

@@ -1,0 +1,53 @@
+[batch 163227-9cca] models=['qwen3.5-9b', 'gpt-oss-20b', 'gemma4-26b', 'claude'] layouts=['A_original'] questions=['q1_gpu_ondemand'] reps=10 mode=rendered_text_v2
+[sandbox] A_original/w0 ready id=21de656c in 5.1s
+[sandbox] A_original/w2 ready id=b2e9ff17 in 5.7s
+[sandbox] A_original/w1 ready id=c6d4417b in 5.9s
+[sandbox] A_original/w3 ready id=49a94bab in 6.8s
+[batch 163227-9cca] 4 sandboxes up in 6.8s
+[  1/40] gpt-oss-20b  A_original       q1_gpu_ondemand      rep0 tools=1  15.6s  {"usd_per_hour": 0.57, "pricing_type": "on_demand", "evidence_quote": "$0.57/h", "not_foun
+[sandbox] screenshot download failed: DaytonaFileNotFoundError
+[sandbox] screenshot download failed: DaytonaFileNotFoundError
+[  2/40] gpt-oss-20b  A_original       q1_gpu_ondemand      rep3 tools=1  17.5s  {"usd_per_hour": 0.57, "pricing_type": "on_demand", "evidence_quote": "Nvidia RTX 4090\n$0
+[  3/40] gpt-oss-20b  A_original       q1_gpu_ondemand      rep2 tools=1  18.0s  {"usd_per_hour": 0.57, "pricing_type": "on_demand", "evidence_quote": "Nvidia RTX 4090\n$0
+[  4/40] gpt-oss-20b  A_original       q1_gpu_ondemand      rep1 tools=1  19.1s  {"usd_per_hour": 0.57, "pricing_type": "on_demand", "evidence_quote": "$0.57/h", "not_foun
+[  5/40] gpt-oss-20b  A_original       q1_gpu_ondemand      rep5 tools=1   8.2s  {"usd_per_hour": 0.57, "pricing_type": "on_demand", "evidence_quote": "Nvidia RTX 4090\n$0
+[  6/40] gpt-oss-20b  A_original       q1_gpu_ondemand      rep6 tools=1   9.4s  {"usd_per_hour": 0.57, "pricing_type": "on_demand", "evidence_quote": "$0.57/h", "not_foun
+[sandbox] screenshot download failed: DaytonaFileNotFoundError
+[sandbox] screenshot download failed: DaytonaFileNotFoundError
+[sandbox] screenshot download failed: DaytonaFileNotFoundError
+[  7/40] gpt-oss-20b  A_original       q1_gpu_ondemand      rep7 tools=1  12.3s  {"usd_per_hour": 0.57, "pricing_type": "on_demand", "evidence_quote": "Nvidia RTX 4090\n$0
+[  8/40] claude       A_original       q1_gpu_ondemand      rep0 tools=2  31.4s  {"usd_per_hour": 0.99, "pricing_type": "on_demand", "evidence_quote": "Nvidia RTX 4090\n\n
+[  9/40] claude       A_original       q1_gpu_ondemand      rep1 tools=2  32.0s  {"usd_per_hour": 0.99, "pricing_type": "on_demand", "evidence_quote": "Nvidia RTX 4090 $0.
+[ 10/40] gemma4-26b   A_original       q1_gpu_ondemand      rep3 tools=2  34.4s  {"usd_per_hour": 0.99, "pricing_type": "on_demand", "evidence_quote": "Nvidia RTX 4090 $0.
+[ 11/40] gemma4-26b   A_original       q1_gpu_ondemand      rep0 tools=2  35.2s  {"usd_per_hour": 0.99, "pricing_type": "on_demand", "evidence_quote": "Nvidia RTX 4090\n\n
+[ 12/40] gemma4-26b   A_original       q1_gpu_ondemand      rep2 tools=2  37.8s  {"usd_per_hour": 0.99, "pricing_type": "on_demand", "evidence_quote": "Nvidia RTX 4090\n\n
+[ 13/40] gpt-oss-20b  A_original       q1_gpu_ondemand      rep4 tools=1  23.9s  {"usd_per_hour": 0.57, "pricing_type": "on_demand", "evidence_quote": "$0.57/h", "not_foun
+[ 14/40] gemma4-26b   A_original       q1_gpu_ondemand      rep1 tools=2  42.2s  {"usd_per_hour": 0.99, "pricing_type": "on_demand", "evidence_quote": "Nvidia RTX 4090\n\n
+[ 15/40] claude       A_original       q1_gpu_ondemand      rep3 tools=4  43.2s  {"usd_per_hour": 0.99, "pricing_type": "on_demand", "evidence_quote": "Nvidia RTX 4090\n\n
+[ 16/40] claude       A_original       q1_gpu_ondemand      rep2 tools=4  43.5s  {"usd_per_hour": 0.99, "pricing_type": "on_demand", "evidence_quote": "Nvidia RTX 4090\n\n
+[ 17/40] claude       A_original       q1_gpu_ondemand      rep4 tools=2  12.6s  {"usd_per_hour": 0.99, "pricing_type": "on_demand", "evidence_quote": "Nvidia RTX 4090 $0.
+[ 18/40] gpt-oss-20b  A_original       q1_gpu_ondemand      rep9 tools=2  17.9s  {"usd_per_hour": 0.57, "pricing_type": "on_demand", "evidence_quote": "Nvidia RTX 4090\n$0
+[ 19/40] gpt-oss-20b  A_original       q1_gpu_ondemand      rep8 tools=2  20.1s  {"usd_per_hour": 0.57, "pricing_type": "on_demand", "evidence_quote": "$0.57/h", "not_foun
+[ 20/40] claude       A_original       q1_gpu_ondemand      rep5 tools=2  14.4s  {"usd_per_hour": 0.99, "pricing_type": "on_demand", "evidence_quote": "Nvidia RTX 4090 $0.
+[ 21/40] qwen3.5-9b   A_original       q1_gpu_ondemand      rep3 tools=2  52.8s  {"usd_per_hour": 0.57, "pricing_type": "unknown", "evidence_quote": "Nvidia RTX 4090 $0.57
+[ 22/40] claude       A_original       q1_gpu_ondemand      rep7 tools=2  11.3s  {"usd_per_hour": 0.99, "pricing_type": "on_demand", "evidence_quote": "Nvidia RTX 4090 $0.
+[ 23/40] claude       A_original       q1_gpu_ondemand      rep8 tools=2  12.3s  {"usd_per_hour": 0.99, "pricing_type": "on_demand", "evidence_quote": "Nvidia RTX 4090 $0.
+[ 24/40] claude       A_original       q1_gpu_ondemand      rep6 tools=2  14.0s  {"usd_per_hour": 0.99, "pricing_type": "on_demand", "evidence_quote": "Nvidia RTX 4090\n\n
+[ 25/40] claude       A_original       q1_gpu_ondemand      rep9 tools=2  13.9s  {"usd_per_hour": 0.99, "pricing_type": "on_demand", "evidence_quote": "Nvidia RTX 4090 $0.
+[ 26/40] gemma4-26b   A_original       q1_gpu_ondemand      rep6 tools=2  23.3s  {"usd_per_hour": 0.99, "pricing_type": "on_demand", "evidence_quote": "Nvidia RTX 4090\n\n
+[ 27/40] gemma4-26b   A_original       q1_gpu_ondemand      rep5 tools=2  28.5s  {"usd_per_hour": 0.99, "pricing_type": "on_demand", "evidence_quote": "Nvidia RTX 4090\n\n
+[ 28/40] gemma4-26b   A_original       q1_gpu_ondemand      rep7 tools=2  24.1s  {"usd_per_hour": 0.99, "pricing_type": "on_demand", "evidence_quote": "Nvidia RTX 4090\n\n
+[sandbox] screenshot download failed: DaytonaFileNotFoundError
+[ 29/40] gemma4-26b   A_original       q1_gpu_ondemand      rep8 tools=2  23.7s  {"usd_per_hour": 0.99, "pricing_type": "on_demand", "evidence_quote": "Nvidia RTX 4090\n\n
+[ 30/40] gemma4-26b   A_original       q1_gpu_ondemand      rep9 tools=2  22.5s  {"usd_per_hour": 0.99, "pricing_type": "on_demand", "evidence_quote": "Nvidia RTX 4090\n\n
+[ 31/40] qwen3.5-9b   A_original       q1_gpu_ondemand      rep2 tools=5 110.4s  {"usd_per_hour": 0.99, "pricing_type": "on_demand", "evidence_quote": "On-demand Nvidia B3
+[ 32/40] qwen3.5-9b   A_original       q1_gpu_ondemand      rep0 tools=3 114.5s  DaytonaProcessExecutionTimeoutError: Failed to execute command: command execution timeout
+[ 33/40] gemma4-26b   A_original       q1_gpu_ondemand      rep4 tools=1  80.5s  DaytonaProcessExecutionTimeoutError: Failed to execute command: command execution timeout
+[ 34/40] qwen3.5-9b   A_original       q1_gpu_ondemand      rep1 tools=6 127.7s  {"usd_per_hour": 0.57, "pricing_type": "unknown", "evidence_quote": "$0.57/h - Nvidia RTX 
+[ 35/40] qwen3.5-9b   A_original       q1_gpu_ondemand      rep4 tools=6  99.8s  {"usd_per_hour": 0.99, "pricing_type": "on_demand", "evidence_quote": "Nvidia RTX 4090 $0.
+[ 36/40] qwen3.5-9b   A_original       q1_gpu_ondemand      rep6 tools=6  61.7s  {"usd_per_hour": 0.99, "pricing_type": "on_demand", "evidence_quote": "Nvidia RTX 4090 $0.
+[ 37/40] qwen3.5-9b   A_original       q1_gpu_ondemand      rep5 tools=6  73.4s  {"usd_per_hour": 0.99, "pricing_type": "on_demand", "evidence_quote": "Nvidia RTX 4090 $0.
+[ 38/40] qwen3.5-9b   A_original       q1_gpu_ondemand      rep7 tools=6  67.4s  {"usd_per_hour": 0.99, "pricing_type": "on_demand", "evidence_quote": "Nvidia RTX 4090 $0.
+[ 39/40] qwen3.5-9b   A_original       q1_gpu_ondemand      rep8 tools=6  65.5s  {"usd_per_hour": 0.57, "pricing_type": "unknown", "evidence_quote": "", "not_found": true}
+[ 40/40] qwen3.5-9b   A_original       q1_gpu_ondemand      rep9 tools=6  76.4s  {"usd_per_hour": 0.57, "pricing_type": "unknown", "evidence_quote": "", "not_found": true}
+[batch 163227-9cca] done 40 runs in 259.4s -> results/runs_rendered_v2_n10.jsonl

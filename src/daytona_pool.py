@@ -12,10 +12,12 @@ from daytona import CreateSandboxFromSnapshotParams, Daytona, FileUpload, Sessio
 ROOT = Path(__file__).resolve().parent.parent
 SITE_DIR = "/home/daytona/site"
 EXTRACT = "/home/daytona/extract.py"
+RENDER = "/home/daytona/render.py"
 
 
 class Pool:
-    def __init__(self, layouts, workers_per_layout=2, log=print):
+    def __init__(self, layouts, workers_per_layout=2, log=print, render=False):
+        self.render = render
         self.d = Daytona()
         self.layouts = layouts
         self.workers = workers_per_layout
@@ -34,7 +36,12 @@ class Pool:
         site = ROOT / "sites" / layout
         files = [FileUpload(source=str(p), destination=f"{SITE_DIR}/{p.relative_to(site)}") for p in site.rglob("*.html")]
         files.append(FileUpload(source=str(ROOT / "src/sandbox_extract.py"), destination=EXTRACT))
+        files.append(FileUpload(source=str(ROOT / "src/sandbox_render.py"), destination=RENDER))
         sb.fs.upload_files(files)
+        if self.render:
+            r = sb.process.exec("pip install -q playwright", timeout=240)
+            if r.exit_code != 0:
+                raise RuntimeError(f"playwright install failed in {layout}/{w}: {r.result[-300:]}")
         sb.process.create_session("http")
         sb.process.execute_session_command("http", SessionExecuteRequest(
             command=f"cd {SITE_DIR} && python3 -m http.server 8000", run_async=True))
@@ -64,6 +71,23 @@ class Pool:
         path = str(path).replace("'", "")
         r = sb.process.exec(f"python3 {EXTRACT} '{path}' {mode}", timeout=30)
         return r.result
+
+    def render_page(self, sb, path, clicks, local_png):
+        """Real Chromium render inside the sandbox; replays clicks; downloads the full-page screenshot."""
+        import json
+        import shlex
+        import uuid
+        remote = f"/tmp/shot_{uuid.uuid4().hex[:8]}.png"
+        cmd = f"python3 {RENDER} {shlex.quote(str(path))} {shlex.quote(json.dumps(clicks))} {remote}"
+        r = sb.process.exec(cmd, timeout=60)
+        frame = None
+        try:
+            Path(local_png).parent.mkdir(parents=True, exist_ok=True)
+            Path(local_png).write_bytes(sb.fs.download_file(remote))
+            frame = str(Path(local_png).relative_to(ROOT / "results"))
+        except Exception as e:  # noqa: BLE001
+            self.log(f"[sandbox] screenshot download failed: {type(e).__name__}")
+        return r.result, frame
 
     def close(self):
         for sbs in self.sandboxes.values():

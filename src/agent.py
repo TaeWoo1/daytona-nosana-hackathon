@@ -32,6 +32,20 @@ TOOLS = [{
 }]
 
 
+CLICK_TOOL = {
+    "type": "function",
+    "function": {
+        "name": "click",
+        "description": "Click the first element on the current page whose text matches, then return the page text.",
+        "parameters": {
+            "type": "object",
+            "properties": {"text": {"type": "string", "description": "visible text of the element to click"}},
+            "required": ["text"],
+        },
+    },
+}
+
+
 def models():
     """Reader models that have env configured. id -> (client, model_name, extra_kwargs, concurrency)."""
     out = {}
@@ -81,8 +95,10 @@ def parse_json(text):
     return None
 
 
-def run(model_id, client, model_name, extra, q, page_fn=None, max_steps=6):
-    """page_fn(path) -> text, or None for NOPAGE. Returns a run record (without grading)."""
+def run(model_id, client, model_name, extra, q, page_fn=None, max_steps=6, click_fn=None):
+    """page_fn(path) -> text | (text, frame), or None for NOPAGE. click_fn(text) -> same, enables the click tool.
+    Returns a run record (without grading)."""
+    tools = TOOLS + ([CLICK_TOOL] if click_fn else [])
     t0 = time.time()
     msgs = [{"role": "system", "content": SYSTEM_PAGE if page_fn else SYSTEM_NOPAGE},
             {"role": "user", "content": format_instructions(q)}]
@@ -91,7 +107,7 @@ def run(model_id, client, model_name, extra, q, page_fn=None, max_steps=6):
         for step in range(max_steps + 1):
             kw = dict(model=model_name, messages=msgs, temperature=0, **extra)
             if page_fn and step < max_steps:
-                kw["tools"] = TOOLS
+                kw["tools"] = tools
             elif page_fn:
                 msgs.append({"role": "user", "content": "Stop using tools now and reply with the JSON object only."})
             r = client.chat.completions.create(**kw)
@@ -124,8 +140,18 @@ def run(model_id, client, model_name, extra, q, page_fn=None, max_steps=6):
                     args = {}
                 path = args.get("path", "/pricing")
                 ts = time.time()
-                out = page_fn(path) if c.function.name == "open_page" else f"ERROR: unknown tool {c.function.name}"
-                tool_log.append({"name": c.function.name, "path": path, "output": out, "sec": round(time.time() - ts, 2)})
+                frame = None
+                if c.function.name == "open_page":
+                    out = page_fn(path)
+                elif c.function.name == "click" and click_fn:
+                    path = args.get("text", "")
+                    out = click_fn(path)
+                else:
+                    out = f"ERROR: unknown tool {c.function.name}"
+                if isinstance(out, tuple):
+                    out, frame = out
+                tool_log.append({"name": c.function.name, "path": path, "output": out, "sec": round(time.time() - ts, 2),
+                                 **({"frame": frame} if frame else {})})
                 msgs.append({"role": "tool", "tool_call_id": c.id, "content": out})
     except Exception as e:  # noqa: BLE001
         err = f"{type(e).__name__}: {str(e)[:300]}"

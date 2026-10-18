@@ -94,3 +94,15 @@
   - NOPAGE field accuracy per model is 0–20%.
   - README results, dashboard and deck were regenerated from summary.json.
 - 16:10 User confirmed: solo build, repo public (it was already PUBLIC), push approved. Added solo/repo info to the README and the deck's last slide.
+- 16:10 Started rendered_text mode (real Chromium + Playwright in the Daytona sandbox). Cutoff 16:35; if it fails, drop it and keep the existing results.
+- 16:10 rendered_text probe in a Daytona sandbox: `/usr/bin/chromium` exists, `pip install playwright` took 1.6 s, and launch + render + screenshot took 2.3 s. Hidden elements are excluded from `inner_text`, as expected.
+- 16:11 Layout A had no JS, so its tabs could not actually be clicked. Added a tab-switch script that matches the real page's behaviour.
+  - I verified that `html_text` and `visible_text` extractor outputs for A are byte-identical before and after (the extractor drops `<script>`), so the earlier results stay valid.
+- 16:11 Implemented `src/sandbox_render.py` plus the `click(text)` tool. Each call is a fresh Chromium: it opens the path, replays the run's click history, then returns `inner_text` and a full-page screenshot.
+  - Frames are saved to `results/frames/<run_id>/step_N.png`. Clicks are logged as tool calls.
+  - Smoke (`results/smoke_rendered.jsonl`, n=1): Claude clicked "On-demand" and answered 0.99. gpt-oss didn't click and answered not_found.
+- 16:13 rendered_text batch: q1, A vs C, 4 models × 3 reps = 24 runs in 87 s on 6 sandboxes → `results/runs_rendered.jsonl`, 47 frames including the smoke run.
+  - A: 8/12 fully correct. Every run that clicked the tab was correct (8/8: Claude 3, Qwen 3, gpt-oss 2), and every run that didn't was not (0/4: Gemma 3 not_found, gpt-oss 1 wrong at $0.57). C: 12/12.
+- 16:14 Dashboard: added a Replay section (choose a model and rep; A and C side by side; screenshot frame on the left; tool calls, answer and verdict badge on the right; prev/next stepping).
+  - Deck: added a rendered_text q1 slide and a "Real browser in Daytona" slide (click table + cropped GPU-section frames).
+  - visible_text is still labelled "static approximation" in the README and deck.

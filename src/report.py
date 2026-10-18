@@ -129,7 +129,8 @@ def replay(mode):
 
 modes = sorted({c["mode"] for c in S["cells"] if c["mode"] != "none"})
 MODE_LABEL = {"html_text": "Reader mode: html_text (all HTML text, incl. hidden tab panel — like a crawler)",
-              "visible_text": "Reader mode: visible_text (hidden elements dropped — static approximation of a browser view)"}
+              "visible_text": "Reader mode: visible_text (hidden elements dropped — static approximation of a browser view)",
+              "rendered_text": "Reader mode: rendered_text (real Chromium in the Daytona sandbox, inner_text + click tool) — q1 only, layouts A and C"}
 sections = []
 for mode in modes:
     sections.append(f"""
@@ -147,6 +148,73 @@ for mode in modes:
 <h3>Path replay</h3>
 {replay(mode)}
 </section>""")
+
+sys.path.insert(0, str(ROOT / "src"))
+import grade as _grade  # noqa: E402
+
+RENDERED = [r for r in RUNS if r.get("mode") == "rendered_text" and r.get("run_id")]
+
+
+def replay_section():
+    if not RENDERED:
+        return ""
+    data = []
+    for r in RENDERED:
+        g = _grade.grade(r)
+        verdict = "correct" if g["all_correct"] else ("wrong" if g["any_wrong"] else
+                                                      ("invalid" if "invalid" in g["fields"].values() else "not_found"))
+        a = r.get("answer") or {}
+        data.append({
+            "id": r["run_id"], "model": r["model"], "layout": r["layout"], "rep": r["rep"],
+            "steps": [{"tool": t["name"], "arg": t["path"], "frame": t.get("frame"), "sec": t["sec"],
+                       "out": (t["output"] or "")[:400]} for t in r["tool_calls"]],
+            "answer": {k: a.get(k) for k in ("usd_per_hour", "pricing_type", "not_found")},
+            "quote": str(a.get("evidence_quote", ""))[:200], "verdict": verdict, "latency": r["latency_sec"],
+            "fields": g["fields"],
+        })
+    pairs = sorted({(d["model"], d["rep"]) for d in data}, key=lambda x: (MODEL_ORDER.index(x[0]) if x[0] in MODEL_ORDER else 9, x[1]))
+    opts = "".join(f'<option value="{m}|{rep}">{html.escape(m)} · rep {rep}</option>' for m, rep in pairs)
+    js_data = json.dumps(data).replace("</", "<\\/")
+    return f"""
+<section id="replay"><h2>Replay · rendered_text (real browser in Daytona)</h2>
+<p class="note">q1 "RTX 4090 that won't be interrupted" (gold $0.99/h on-demand). Each frame is a full-page screenshot taken inside the Daytona sandbox after that tool call
+(results/frames/). Pick a model and rep; step through layout A and C side by side.</p>
+<label>Run: <select id="rpSel">{opts}</select></label>
+<div class="rpgrid"><div class="rpane" data-layout="A_original"></div><div class="rpane" data-layout="C_faq_structured"></div></div>
+<script>
+const RP = {js_data};
+const LBL = {{"A_original": "A · original (tabs)", "C_faq_structured": "C · B + FAQ + JSON-LD"}};
+function esc(s) {{ return String(s).replace(/[&<>"]/g, c => ({{"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}})[c]); }}
+function renderPane(pane, run, i) {{
+  const n = run.steps.length;           // steps 0..n-1 = tool calls, step n = final answer
+  i = Math.max(0, Math.min(i, n));
+  pane.dataset.i = i;
+  const lastFrame = run.steps.filter(s => s.frame).map(s => s.frame).pop();
+  const frame = i < n ? run.steps[i].frame : lastFrame;
+  const list = run.steps.map((s, k) =>
+    `<li class="${{k === i ? 'cur' : ''}}"><code>${{esc(s.tool)}}("${{esc(s.arg)}}")</code> <small>${{s.sec}}s</small></li>`).join("")
+    + `<li class="${{i === n ? 'cur' : ''}}"><b>final answer</b></li>`;
+  const detail = i < n
+    ? `<pre>${{esc(run.steps[i].out)}}</pre>`
+    : `<p><b>Answer:</b> ${{esc(JSON.stringify(run.answer))}}</p><p class="quote">“${{esc(run.quote)}}”</p>
+       <p><span class="tag ${{run.verdict}}">${{run.verdict}}</span> <small>fields: ${{esc(JSON.stringify(run.fields))}} · ${{run.latency}}s total</small></p>`;
+  pane.innerHTML = `<h4>${{LBL[run.layout]}} <span class="tag ${{run.verdict}}">${{run.verdict}}</span></h4>
+    <div class="rpin"><div class="frame">${{frame ? `<a href="${{esc(frame)}}" target="_blank" title="open full size"><img src="${{esc(frame)}}" alt="screenshot step ${{i + 1}}"></a>` : '<p class="note">(no frame)</p>'}}</div>
+    <div class="steps"><div class="nav"><button data-d="-1">◀ prev</button> step ${{i + 1}}/${{n + 1}} <button data-d="1">next ▶</button></div>
+    <ol>${{list}}</ol>${{detail}}</div></div>`;
+  pane.querySelectorAll("button").forEach(b => b.onclick = () => renderPane(pane, run, i + Number(b.dataset.d)));
+}}
+function show() {{
+  const [m, rep] = document.getElementById("rpSel").value.split("|");
+  document.querySelectorAll(".rpane").forEach(p => {{
+    const run = RP.find(r => r.model === m && String(r.rep) === rep && r.layout === p.dataset.layout);
+    if (run) renderPane(p, run, 0); else p.innerHTML = "<p class='note'>(no run)</p>";
+  }});
+}}
+document.getElementById("rpSel").onchange = show; show();
+</script>
+</section>"""
+
 
 n_sb = len({r.get("sandbox_id") for r in RUNS if r.get("sandbox_id")})
 n_tool = sum(r["n_tool_calls"] for r in RUNS)
@@ -169,12 +237,19 @@ section{{background:var(--card);border:1px solid var(--line);border-radius:10px;
 .rps{{display:grid;grid-template-columns:1fr 1fr;gap:12px}} .rp{{border:1px solid var(--line);border-radius:8px;padding:10px}}
 .quote{{color:var(--mut);font-style:italic;font-size:13px}} .tag{{padding:1px 6px;border-radius:4px;color:#fff;font-size:12px}}
 .tag.not{{background:hsl(40 80% 45%)}}
-@media (max-width:700px){{.rps{{grid-template-columns:1fr}} .bl{{width:110px}} .cell{{font-size:14px}}}}
+.rpgrid{{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:10px}} .rpane{{border:1px solid var(--line);border-radius:8px;padding:10px;min-width:0}}
+.rpin{{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:10px}} .frame{{max-height:560px;overflow:auto;border:1px solid var(--line);border-radius:6px;background:#fff}}
+.frame img{{width:100%;display:block}} .steps ol{{padding-left:20px;font-size:13px}} .steps li.cur{{font-weight:700;background:var(--empty);border-radius:4px}}
+.steps pre{{white-space:pre-wrap;font-size:11px;max-height:300px;overflow:auto;background:var(--empty);padding:6px;border-radius:4px}}
+.nav button{{font:inherit;padding:2px 8px;cursor:pointer}} .tag.correct{{background:hsl(130 55% 38%)}} .tag.wrong{{background:hsl(0 65% 48%)}} .tag.not_found{{background:hsl(40 80% 45%)}} .tag.invalid{{background:#888}}
+@media (max-width:1000px){{.rpgrid{{grid-template-columns:1fr}}}}
+@media (max-width:700px){{.rpin{{grid-template-columns:1fr}} .rps{{grid-template-columns:1fr}} .bl{{width:110px}} .cell{{font-size:14px}}}}
 </style></head><body>
 <h1>AgentReadable</h1>
 <p class="sub">How accurately does each AI reader get the facts from the real Daytona pricing page (captured 2026-10-18 15:35 KST), by layout and by model?</p>
-<p class="note">{S['n_runs']} graded runs · {n_tool} open_page tool calls executed inside {n_sb} Daytona sandboxes · readers: 3 open-weight models on Nosana GPUs + 2 API models · temperature 0 · small n, results are "in these runs", not proof.</p>
+<p class="note">{S['n_runs']} graded runs · {n_tool} tool calls (open_page / click) executed inside {n_sb} Daytona sandboxes · readers: 3 open-weight models on Nosana GPUs + Claude via API (OpenAI configured but excluded: no API credits) · temperature 0 · small n, results are "in these runs", not proof.</p>
 {''.join(sections)}
+{replay_section()}
 <p class="note">Generated by src/report.py from {', '.join(html.escape(str(Path(f).name)) for f in RUN_FILES)}, results/graded.jsonl, results/summary.json.</p>
 </body></html>"""
 (ROOT / "results/dashboard.html").write_text(doc)

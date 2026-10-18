@@ -90,6 +90,20 @@ A_BODY = f"""
   </div>
 </section>
 {COMMON_BOTTOM}
+<script>
+// tab behaviour like the real page: clicking a tab shows its panel and hides the other
+document.querySelectorAll('[role=tab]').forEach(function (tab) {{
+  tab.addEventListener('click', function () {{
+    document.querySelectorAll('[role=tab]').forEach(function (t) {{
+      var panel = document.getElementById(t.getAttribute('aria-controls'));
+      var on = t === tab;
+      t.setAttribute('aria-selected', on ? 'true' : 'false');
+      if (on) {{ panel.removeAttribute('hidden'); panel.style.cssText = ''; }}
+      else {{ panel.setAttribute('hidden', ''); panel.style.cssText = 'display: none; height: 0px; overflow: hidden;'; }}
+    }});
+  }});
+}});
+</script>
 """
 
 # B: same facts; one GPU table with both columns visible and explicitly labelled; storage free tier next to the price.

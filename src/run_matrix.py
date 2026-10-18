@@ -39,7 +39,7 @@ def main():
     batch = time.strftime("%H%M%S") + "-" + uuid.uuid4().hex[:4]
     print(f"[batch {batch}] models={list(ms)} layouts={layouts} questions={[q['id'] for q in qs]} reps={a.reps} mode={a.mode}")
 
-    pool = Pool([l for l in layouts if l != "NOPAGE"], a.workers)
+    pool = Pool([l for l in layouts if l != "NOPAGE"], a.workers, render=a.mode == "rendered_text")
     out = ROOT / a.out
     out.parent.mkdir(exist_ok=True)
     wlock = threading.Lock()
@@ -55,13 +55,33 @@ def main():
         def do(job):
             mid, l, q, rep = job
             client, name, extra, _ = ms[mid]
+            run_id = f"{batch}-{mid}-{l}-{q['id'][:2]}-r{rep}"
+            click_fn = None
             if l == "NOPAGE":
                 page_fn, sbid = None, None
+            elif a.mode == "rendered_text":
+                sb = pool.pick(l)
+                sbid = sb.id
+                # browser state per run: current path + click history, replayed on each (stateless) sandbox call
+                st = {"path": "/pricing", "clicks": [], "step": 0}
+
+                def shot():
+                    st["step"] += 1
+                    return ROOT / "results/frames" / run_id / f"step_{st['step']}.png"
+
+                def page_fn(p):
+                    st["path"], st["clicks"] = p, []
+                    return pool.render_page(sb, p, [], shot())
+
+                def click_fn(t):
+                    st["clicks"].append(t)
+                    return pool.render_page(sb, st["path"], st["clicks"], shot())
             else:
                 sb = pool.pick(l)
                 sbid = sb.id
                 page_fn = lambda p: pool.open_page(sb, p, a.mode)  # noqa: E731
-            rec = agent.run(mid, client, name, extra, q, page_fn)
+            rec = agent.run(mid, client, name, extra, q, page_fn, click_fn=click_fn)
+            rec["run_id"] = run_id
             rec.update({"batch": batch, "layout": l, "rep": rep, "mode": a.mode if l != "NOPAGE" else "none",
                         "sandbox_id": sbid, "ts": time.strftime("%Y-%m-%dT%H:%M:%S%z")})
             with wlock, out.open("a") as f:

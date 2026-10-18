@@ -155,3 +155,14 @@
   - Deck: repo URL on the title slide, plus a "Judging criteria" slide with the 4 official names (16 slides). LICENSE not added (user's call).
 - 16:56 Committed the computer-use aside (`src/cu_demo_stdlib.py`, `results/cu_aside/`, 3.1 MB incl. recordings). README: new "Computer use (qualitative, n=1)" section; Problem line now states experiments ran on layouts reproducing the real page structure, not the live site.
 - 16:57 Deck rebuilt as 7 slides + appendix (dark, stage.html tone): hook (real-page capture + gpt-oss A confident-wrong 10/10), human vs AI view (v2 crop vs inner_text of the same run), stage scene (60 runs, 7 infra, 53 graded), A dots per model + C 20/20 + No page 0/12, computer use (n=1), pipeline + sponsor counts, product/next (Smart Store)/limits/repo. Appendix: Judging criteria, q1 tables, 5-question heatmaps, limitations. All numbers from summary.json / runs files. PDF 14 pages, 1.4 MB.
+- 17:00 (Aside) Submitted the Google Form 'Hackathon Project Submission': AgentReadable, solo (Taewoo Kang), repo https://github.com/TaeWoo1/daytona-nosana-hackathon (public, latest commit 16:57 'Deck: 7 slides + appendix'), deck.pdf 1.46 MB. Confirmation page: '응답이 기록되었습니다.'
+- 17:14 (Aside) LIVE computer-use demo: `src/cu_live.py` (stdlib).
+  - Usage: `prepare` / `go A_original` / `go C_faq_structured` / `cleanup`.
+  - Two public `daytona-medium` sandboxes (Tier 1 RAM limit allows 2). Each serves both layouts on its own port, runs a desktop with kiosk Chromium, and is watched live via the Daytona noVNC preview (port 6080) in `results/live/live.html`, a 2-pane view with step captions and a verdict badge.
+  - Rehearsal run 1 had a harness bug: the layout was served under a sub-path, so the nav links 404'd. Fixed with a per-layout port.
+  - Clean rehearsal, layout A:
+    - Claude clicked the On-demand pill → $0.99, correct.
+    - Gemma 4 kept clicking about (305,410). The pill was at about y≈311 after scroll, a ratio ≈1.33 = 1024/768, so Gemma appears to emit y in a square coordinate space. No answer.
+  - Layout C: Gemma answered $0.99 in 2 steps, correct; Claude result in results/live/.
+  - Qualitative, n=1.
+- 17:48 Deleted local .venv (116 MB) at user request; requirements.txt restores it. Committed the live computer-use demo (live_demo.sh, src/cu_live.py, results/live/ 4.9 MB). The 2 live sandboxes in results/live/state.json are already deleted (API 404), so the noVNC URLs there are dead.

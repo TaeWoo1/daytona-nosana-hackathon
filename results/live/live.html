@@ -1,0 +1,29 @@
+<!doctype html><html><head><meta charset="utf-8"><title>AgentReadable LIVE</title>
+<style>body{margin:0;background:#0a0a0a;color:#eee;font-family:Inter,system-ui,sans-serif}
+h1{margin:10px 18px 4px;font-size:22px}.sub{margin:0 18px 8px;color:#999;font-size:14px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 12px 12px}
+.pane{background:#151515;border:1px solid #2a2a2a;border-radius:10px;overflow:hidden;position:relative}
+.hdr{display:flex;justify-content:space-between;align-items:center;padding:6px 10px;font-size:14px}
+.tag{font-weight:700}.v{padding:2px 8px;border-radius:6px;font-weight:700;font-size:13px}
+.ok{background:#2e7d32}.bad{background:#c62828}.nf{background:#b26a00}.run{background:#333}
+iframe{width:100%;aspect-ratio:4/3;border:0;display:block;background:#000}
+.cap{background:#1d1d1d;border-top:1px solid #2a2a2a;padding:8px 10px;font-size:16px;min-height:22px;color:#ffd27a}
+</style></head><body>
+<h1>LIVE · AI agents operating real browsers inside Daytona sandboxes</h1>
+<div class="sub">Q: "I need an RTX 4090 that will not be interrupted. How much per hour?" · gold $0.99/h on-demand · agents see only screenshots and click by pixel</div>
+<div class="grid" id="g"></div>
+<script>
+const S = [{"reader": "claude", "layout": "both", "sid": "5cc4c505-eb28-4464-8d52-4b61165a8645", "vnc": "https://6080-5cc4c505-eb28-4464-8d52-4b61165a8645.daytonaproxy01.net/vnc.html?autoconnect=true&resize=scale&view_only=true&show_dot=true"}, {"reader": "gemma", "layout": "both", "sid": "b58972f0-39db-4217-9979-0849d96d2e2f", "vnc": "https://6080-b58972f0-39db-4217-9979-0849d96d2e2f.daytonaproxy01.net/vnc.html?autoconnect=true&resize=scale&view_only=true&show_dot=true"}];
+const names={claude:"Claude (API)",gemma:"Gemma 4 26B · open model on Nosana GPU"}, lays={A_original:"Round 1 · Layout A (original tabs)",C_faq_structured:"Round 2 · Layout C (explicit labels)"};
+const g=document.getElementById('g');
+S.forEach(p=>{const k=p.reader;g.insertAdjacentHTML('beforeend',
+ `<div class="pane"><div class="hdr"><span class="tag">${names[p.reader]} <span id="l-${k}" style="color:#9ab"></span></span><span class="v run" id="v-${k}">ready</span></div>
+  <iframe src="${p.vnc}"></iframe><div class="cap" id="c-${k}">waiting…</div></div>`)});
+async function tick(){try{const r=await fetch('events.json?'+Date.now());const ev=await r.json();
+ S.forEach(p=>{const k=p.reader,e=ev[k];if(!e)return;if(e.layout)document.getElementById('l-'+k).textContent='· '+lays[e.layout];const st=e.steps[e.steps.length-1];
+  if(st)document.getElementById('c-'+k).textContent=`step ${st.n}: ${st.text}`;
+  const v=document.getElementById('v-'+k);
+  if(e.verdict){v.textContent=e.verdict==='correct'?'✓ $0.99 correct':(e.verdict==='wrong'?'✗ '+(e.answer_text||'wrong'):'∅ no answer');v.className='v '+(e.verdict==='correct'?'ok':e.verdict==='wrong'?'bad':'nf');}
+  else {v.textContent='running…';v.className='v run'}})}catch(e){}}
+setInterval(tick,700);
+</script></body></html>

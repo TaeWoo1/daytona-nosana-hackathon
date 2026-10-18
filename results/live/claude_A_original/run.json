@@ -1,0 +1,1 @@
+{"pane": "claude", "answer": {"usd_per_hour": 0.99, "pricing_type": "on_demand", "evidence": "The pricing page shows \"Nvidia RTX 4090\" at $0.99/h under the \"On-demand\" pricing option, which provides non-interruptible GPU instances."}, "verdict": "correct"}

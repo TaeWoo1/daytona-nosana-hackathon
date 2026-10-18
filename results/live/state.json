@@ -1,0 +1,14 @@
+[
+  {
+    "reader": "claude",
+    "layout": "both",
+    "sid": "5cc4c505-eb28-4464-8d52-4b61165a8645",
+    "vnc": "https://6080-5cc4c505-eb28-4464-8d52-4b61165a8645.daytonaproxy01.net/vnc.html?autoconnect=true&resize=scale&view_only=true&show_dot=true"
+  },
+  {
+    "reader": "gemma",
+    "layout": "both",
+    "sid": "b58972f0-39db-4217-9979-0849d96d2e2f",
+    "vnc": "https://6080-b58972f0-39db-4217-9979-0849d96d2e2f.daytonaproxy01.net/vnc.html?autoconnect=true&resize=scale&view_only=true&show_dot=true"
+  }
+]

@@ -108,131 +108,149 @@ nosana_runs = sum(1 for r in OK_RUNS if r["model"] in ("qwen3.5-9b", "gpt-oss-20
 modes = sorted({c["mode"] for c in S["cells"] if c["mode"] != "none"})
 excl = S.get("excluded_infra_errors", {})
 
-slides = []
-slides.append("""<section class="title"><h1>AgentReadable</h1>
-<p class="big">AI agents now read your website for your customers.<br>We measure how accurately your real pages get through to each AI reader,
-by layout and by model, and show which layout survives even the weakest model.</p>
-<p class="spons">Built on <b>Daytona</b> sandboxes · <b>Nosana</b> GPUs · github.com/TaeWoo1/daytona-nosana-hackathon</p></section>""")
-slides.append(f"""<section><h2>Problem: the agent quotes the wrong price</h2>
-<p>Customer → AI agent: <i>"I need an RTX 4090 that won't be interrupted. How much per hour?"</i></p>
-<p>Real page <code>daytona.io/pricing</code> (captured 2026-10-18 15:35 KST): the GPU table opens on the <b>Preemptible</b> tab ($0.57/h).
-The <b>On-demand</b> price ($0.99/h) is in a hidden tab panel. "Preemptible" is not defined on the page.</p>
-<div class="two">{example('visible_text', 'A_original', 'gpt-oss-20b')}{example('visible_text', 'C_faq_structured', 'gpt-oss-20b')}</div>
-<p class="note">Two real runs from results/runs_visible.jsonl (first logged run per layout). Gold: $0.99/h on-demand.</p></section>""")
-slides.append("""<section><h2>What we built</h2>
-<div class="flow"><div>Real page<br><small>+ gold answer key</small></div><span>→</span><div>Layouts A / B / C<br><small>same facts, different arrangement</small></div><span>→</span>
-<div class="dt">Daytona sandboxes<br><small>serve each layout · run every page fetch + extraction, isolated, in parallel</small></div><span>→</span>
-<div class="ns">Reader agents<br><small>3 open models on Nosana GPUs + Claude</small></div><span>→</span><div>Code grader<br><small>no LLM judge</small></div><span>→</span><div>Dashboard</div></div>
-<ul><li>Same system prompt and one tool, <code>open_page(path)</code>, for every model. Temperature 0. Strict JSON answer + evidence quote + not_found.</li>
-<li>Two reader modes: <b>html_text</b> (all HTML text, like a crawler) and <b>visible_text</b> (hidden elements dropped, a static approximation of a browser view).</li>
-<li>Control: <b>No page</b>, where the model answers from memory.</li></ul></section>""")
-slides.append("""<section><h2>Method and metrics</h2>
-<ul><li>Gold answers from the real page, 5 questions: GPU on-demand trap, CPU cost with "first 5 GiB free", card / free credit, billing unit, Windows price.</li>
-<li>Per run: each field is graded <b>correct / not found / wrong / invalid</b>. A confident wrong value is worse than "not found".</li>
-<li><b>Field accuracy</b>, <b>evidence reach</b> (did the gold text appear in the tool output?), and the headline <b>worst-model accuracy per layout</b>.</li>
-<li>3 reps per cell. Small n, so we say "in these runs", not "proven".</li></ul></section>""")
-for mode in [m for m in modes[::-1] if m not in ("rendered_text", "rendered_text_v2_n3")]:
-    slides.append(f"""<section><h2>q1 "won't be interrupted" · {mode}</h2>{strict_q(mode, "q1_gpu_ondemand")}
-<p class="note">Cell = fully correct runs / runs (gold $0.99/h on-demand); "wrong" = runs with a confident wrong value. Source: results/summary.json (cells_by_question).</p></section>""")
-RENDER_VER = {"rendered_text": ("v1 plain mirror", "results/runs_rendered.jsonl", ("700", "520", "660", "80")),
-              "rendered_text_v2": ("v2 styled, A n=10 / C n=5", "results/runs_rendered_v2_n10.jsonl", ("400", "400", "625", "0"))}
-for rmode in [m for m in RENDER_VER if m in modes]:
-    ver_label, src_file, (ch, cw, cy, cx) = RENDER_VER[rmode]
-    sys.path.insert(0, str(ROOT / "src"))
-    import grade as _grade
-    rend = [r for r in OK_RUNS if r["mode"] == rmode and r["layout"] == "A_original"]
-    rows = []
-    for m in MODELS:
-        xs = [r for r in rend if r["model"] == m]
-        if not xs:
-            continue
-        clicked = [r for r in xs if any(t["name"] == "click" for t in r["tool_calls"])]
-        ok_c = sum(_grade.grade(r)["all_correct"] for r in clicked)
-        ok_n = sum(_grade.grade(r)["all_correct"] for r in xs if r not in clicked)
-        rows.append(f"<tr><td>{ML[m]}</td><td>{len(clicked)}/{len(xs)}</td><td>{ok_c}/{len(clicked)}</td>"
-                    f"<td>{ok_n}/{len(xs) - len(clicked)}</td></tr>")
-    ex = next((r for r in rend if any(t["name"] == "click" for t in r["tool_calls"]) and _grade.grade(r)["all_correct"]
-               and all(t.get("frame") for t in r["tool_calls"][:2])), None)
-    frames = ""
-    if ex:
-        f1, f2 = ex["tool_calls"][0]["frame"], next(t["frame"] for t in ex["tool_calls"] if t["name"] == "click")
-        crops = []
-        for k, f in enumerate((f1, f2)):
-            # crop the GPU section of the full-page screenshot so it is readable on a slide (macOS sips)
-            out = ROOT / "deck" / f"frame_crop_{rmode}_{k + 1}.png"
-            subprocess.run(["sips", "-c", ch, cw, "--cropOffset", cy, cx, str(ROOT / "results" / f), "--out", str(out)],
-                           check=True, capture_output=True)
-            crops.append(out.name)
-        f1, f2 = crops
-        frames = (f'<div class="frames"><figure><img src="{f1}"><figcaption>step 1 · open_page: Preemptible tab shown</figcaption></figure>'
-                  f'<figure><img src="{f2}"><figcaption>after click("On-demand")</figcaption></figure></div>'
-                  f'<p class="note2">GPU section cropped from full-page screenshots. Frames: {ML[ex["model"]]}, run {html.escape(ex["run_id"])} (results/frames/).</p>')
-    slides.append(f"""<section><h2>Real browser in Daytona · layout A · {ver_label}</h2><div class="two">
-<div><table class="ct"><tr><th>model</th><th>clicked On-demand tab</th><th>fully correct | clicked</th><th>fully correct | no click</th></tr>{"".join(rows)}</table>
-<p>Chromium runs inside the Daytona sandbox (Playwright). The reader can <code>click(text)</code>; each step is screenshotted.
-Agents that clicked the tab could read $0.99. Agents that didn't, couldn't.</p></div><div>{frames}</div></div>
-{f'<p class="hl">{html.escape(S["behavior_headline"])}</p>' if rmode == "rendered_text_v2" and S.get("behavior_headline") else ""}
-<p class="note">q1 only, layout A, {"10" if rmode == "rendered_text_v2" else "3"} reps per model. Source: {src_file} graded by src/grade.py.</p></section>""")
-for mode in [m for m in modes if not m.startswith("rendered_text")]:
-    slides.append(f"""<section><h2>All 5 questions · {mode}</h2>{heat(mode)}
-<p class="note">Cell = mean share of answer fields matching gold. n = runs (5 questions × 3 reps). Outlined column = weakest model per layout. Source: results/summary.json.</p></section>""")
-if "visible_text" in modes:
-    slides.append(f"""<section><h2>Which fact breaks (visible_text)</h2>{qbars('visible_text', ['q1_gpu_ondemand', 'q2_cpu_sandbox_cost', 'q3_signup'])}
-<div class="lg"><span class="s correct">fully correct</span><span class="s not_found">not found</span><span class="s wrong">wrong value</span><span class="s invalid">invalid JSON</span></div>
-<p class="note">All models pooled, runs per layout. Source: results/summary.json (by_question).</p></section>""")
-slides.append(f"""<section><h2>Sponsor usage</h2><div class="two">
-<div class="card dt"><h3>Daytona</h3><ul><li>{n_sb} ephemeral sandboxes across runs, each serving one layout on localhost:8000</li>
-<li>{n_tool} <code>open_page</code> calls executed inside sandboxes (median {med_tool:.2f}s each), with a fresh process per call and no shared state</li>
-<li>Parallel fan-out: layouts × workers, all runs from one script</li></ul></div>
-<div class="card ns"><h3>Nosana</h3><ul><li>3 open-weight reader models on decentralized GPUs: Qwen 3.5 9B (RTX 3090), gpt-oss 20B and Gemma 4 26B (RTX 4090)</li>
-<li>{nosana_runs} graded reader runs served from Nosana</li>
-<li>Small open models are exactly the readers that need a robust layout</li></ul></div></div>
-<p class="note">Counts from results/runs*.jsonl. Graded runs total: {n_runs}.</p></section>""")
-slides.append(f"""<section><h2>Limitations and next steps</h2><ul>
-<li>One page, a simplified mirror (A), 3 reps per cell. Directional, not proof.</li>
-<li>visible_text is a static approximation (drops hidden elements). rendered_text (real Chromium) was run for q1 only, on layouts A and C, on two site versions: v1 plain mirror and v2 styled like the real page (both are our re-creations, not the live site).</li>
-<li>Field accuracy gives partial credit. See the per-question "fully correct" view.</li>
-<li>OpenAI excluded: the API key had no credits ({html.escape(json.dumps(excl))}).</li>
-<li>Gold ambiguity: "first 5 GiB free" per sandbox or per org? (Both readings are inside the q2 tolerance.)</li>
-<li>Next: more pages and verticals, an auto-fix suggestion per failing fact, and a CI check: "does this layout change break any AI reader?"</li></ul></section>""")
+# --- main deck: 7 slides, dark, same tone as results/stage.html; appendix after ---
 _hb = {(b["run_set"], b["layout"], b["model"]): b for b in S.get("behavior", [])}
-_a, _c = _hb.get(("runs_rendered_v2_n10", "A_original", "ALL")), _hb.get(("runs_rendered_v2_n10", "C_faq_structured", "ALL"))
+HL = "runs_rendered_v2_n10"
+_a, _c = _hb[(HL, "A_original", "ALL")], _hb[(HL, "C_faq_structured", "ALL")]
 _k = lambda x: f"{x['k']}/{x['n']}"  # noqa: E731
-if _a and _c:
-    slides.append(f"""<section class="jc"><h2>Judging criteria</h2><div class="two">
-<div class="card"><h3>Completeness</h3><ul><li>End-to-end: real page → gold → layouts → Daytona sandboxes → reader agents → code grader → dashboard, replay, deck</li>
+_g = _hb[(HL, "A_original", "gpt-oss-20b")]
+_np = [c for c in S["cells_by_question"] if c["layout"] == "NOPAGE" and c["question"] == "q1_gpu_ondemand"]
+np_k, np_n = sum(c["fully_correct"] for c in _np), sum(c["n_runs"] for c in _np)
+hl_runs = [r for r in RUNS if r["_set"] == HL]
+hl_ok = [r for r in hl_runs if not _grade.infra_reason(r)]
+hl_infra = len(hl_runs) - len(hl_ok)
+D = ROOT / "deck"
+# real page capture (data/raw/ref), GPU card area
+subprocess.run(["sips", "-c", "1100", "2880", "--cropOffset", "500", "0", str(ROOT / "data/raw/ref/daytona_pricing_2026-10-18_screenshot.png"),
+                "--out", str(D / "ref_crop.png")], check=True, capture_output=True)
+# v2 screenshot GPU crop (pre-click) from the gpt-oss A run, and the inner_text that same reader got
+ga = next(r for r in hl_ok if r["model"] == "gpt-oss-20b" and r["layout"] == "A_original" and r["tool_calls"][0].get("frame"))
+subprocess.run(["sips", "-c", "400", "400", "--cropOffset", "625", "0", str(ROOT / "results" / ga["tool_calls"][0]["frame"]),
+                "--out", str(D / "human_view.png")], check=True, capture_output=True)
+_o = ga["tool_calls"][0]["output"]
+_i = _o.find("GPU\n")
+ai_view = "\n".join(x for x in _o[_i:_o.find("Memory", _i)].split("\n") if x.strip())
+_ga = ga.get("answer") or {}
+# stage.html scene capture (gpt-oss A vs C at ~14 s)
+chrome = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+subprocess.run([chrome, "--headless=new", "--disable-gpu", "--hide-scrollbars", "--window-size=1920,1080", "--virtual-time-budget=14000",
+                f"--screenshot={D / 'stage_scene.png'}", f"file://{ROOT / 'results/stage.html'}"], check=True, capture_output=True, timeout=120)
+subprocess.run(["sips", "-Z", "1600", str(D / "stage_scene.png")], check=True, capture_output=True)
+
+
+def dots(layout):
+    out = []
+    for m in ["claude", "gemma4-26b", "qwen3.5-9b", "gpt-oss-20b"]:
+        xs = [r for r in hl_ok if r["layout"] == layout and r["model"] == m]
+        b = _hb[(HL, layout, m)]
+        ds = "".join(f'<i class="d {_grade.outcome(_grade.grade(r))}"></i>' for r in xs)
+        out.append(f'<div class="dr"><span class="dm">{ML[m]}</span><span class="ds">{ds}</span>'
+                   f'<span class="dn">correct {_k(b["correct_rate"])} · clicked {_k(b["click_rate"])} · confident-wrong {_k(b["confident_wrong_rate"])}</span></div>')
+    return "".join(out)
+
+
+cu = {k: json.loads((ROOT / f"results/cu_aside/{k}/run.json").read_text()) for k in ("A_original", "A_original_gemma", "C_faq_structured")}
+for k in ("A_original", "A_original_gemma"):
+    subprocess.run(["cp", str(ROOT / f"results/cu_aside/{k}/step_3.png"), str(D / f"cu_{k}.png")], check=True)
+
+
+def cu_line(k):
+    j = cu[k]
+    clicks = [s["input"] for s in j["steps"] if s["action"] == "click"]
+    a = j.get("answer") or {}
+    pts = ", ".join(f"({c['x']},{c['y']})" for c in clicks[:1])
+    return (f"{html.escape(j['model'])}: {len(clicks)} click(s) at {pts or '–'}; "
+            f"answer {html.escape(str(a.get('usd_per_hour')) if a else 'none')} · verdict {html.escape(str(j.get('verdict')))}")
+
+
+slides = []
+slides.append(f"""<section class="hook"><div class="hk"><p class="kick">AgentReadable</p>
+<h1><span class="red">{_g['confident_wrong_rate']['k']}/{_g['confident_wrong_rate']['n']}</span> wrong price</h1>
+<p class="big">"I need an RTX 4090 that won't be interrupted. How much per hour?"<br>gpt-oss 20B, reading a reproduction of this page in a real browser, answered <b class="red">$0.57</b> every time. The on-demand price is <b class="grn">$0.99</b>.</p>
+<p class="url">github.com/TaeWoo1/daytona-nosana-hackathon · Daytona · Nosana</p></div>
+<figure class="ref"><img src="ref_crop.png"><figcaption>daytona.io/pricing, captured 2026-10-18 (data/raw/ref). GPU table opens on <b>Preemptible</b>.</figcaption></figure>
+<p class="note">gpt-oss 20B, layout A, q1, {_g['n_runs']} runs: confident-wrong {_k(_g['confident_wrong_rate'])}, clicked the tab {_k(_g['click_rate'])}. Source: results/summary.json → behavior ({HL}).</p></section>""")
+slides.append(f"""<section><h2>Human view vs AI view</h2><div class="two">
+<figure><img class="shot" src="human_view.png"><figcaption>Human: the pill toggle shows which price is which. Screenshot from Chromium in the Daytona sandbox.</figcaption></figure>
+<div><pre class="pre">{html.escape(ai_view)}</pre><p class="cap">AI (gpt-oss 20B): the page's inner_text. "Preemptible" and "On-demand" are just two words; nothing says which list follows.
+It answered <b class="red">${_ga.get('usd_per_hour')} "{html.escape(str(_ga.get('pricing_type')))}"</b>.</p></div></div>
+<p class="note">Same run: {html.escape(ga['run_id'])} (results/runs_rendered_v2_n10.jsonl, frames in results/frames/). Layout A reproduces the real page structure; it is not the live site.</p></section>""")
+slides.append(f"""<section><h2>{len(hl_runs)} real-browser runs in Daytona</h2><img class="stage" src="stage_scene.png">
+<p class="cap">results/stage.html (40 s autoplay). Each run: a Daytona sandbox serves the layout, headless Chromium renders it, the reader can <code>click(text)</code>, every step is screenshotted.</p>
+<p class="note">{len(hl_runs)} runs in {HL}: A 10 reps × 4 models, C 5 reps × 4 models. {hl_infra} excluded as infra (browser/exec errors, LOG.md); {len(hl_ok)} graded.</p></section>""")
+slides.append(f"""<section><h2>Click the tab, or quote the wrong price</h2>
+<h3>Layout A · original tabs</h3>{dots("A_original")}
+<p class="hlx">Clicked → correct <b class="grn">{_k(_a['correct_given_clicked'])}</b> · no click → correct <b class="red">{_k(_a['correct_given_no_click'])}</b></p>
+<div class="three"><div class="big2"><b class="grn">{_k(_c['correct_rate'])}</b><span>layout C (both prices labelled + FAQ + JSON-LD), all 4 models</span></div>
+<div class="big2"><b class="red">{np_k}/{np_n}</b><span>No page (answer from memory), q1 fully correct = {np_k / np_n * 100:.0f}%</span></div></div>
+<div class="lg"><i class="d correct"></i>correct <i class="d confident_wrong"></i>confident wrong <i class="d not_found"></i>not found</div>
+<p class="note">Dots = graded runs, q1 ({HL}; No page from results/summary.json cells_by_question, mode none). Infra-excluded runs not shown.</p></section>""")
+slides.append(f"""<section><h2>Computer use: pixels only <span class="n1">qualitative, n=1</span></h2><div class="two">
+<figure><img class="shot" src="cu_A_original.png"><figcaption>Claude · layout A · step 3: {cu_line('A_original')}</figcaption></figure>
+<figure><img class="shot" src="cu_A_original_gemma.png"><figcaption>Gemma 4 26B · layout A · step 3: {cu_line('A_original_gemma')}</figcaption></figure></div>
+<p class="cap">Daytona computer-use desktop + recording API. Screenshot in, <code>click(x,y)</code> out. Claude hit the On-demand pill; Gemma said "switch to On-demand" but clicked the MI355X row. Layout C: {cu_line('C_faq_structured')}.
+Coordinate miss may partly be Ollama image resizing (<b>unverified</b>).</p>
+<p class="note">results/cu_aside/ (run.json, step PNGs, recording.mp4). One run per cell, not part of the headline numbers.</p></section>""")
+slides.append(f"""<section><h2>Pipeline</h2>
+<div class="flow"><div>Real page<br><small>+ gold answers</small></div><span>→</span><div>Layouts A / B / C<br><small>same facts</small></div><span>→</span>
+<div class="dt">Daytona sandboxes<br><small>serve layout · Chromium · every tool call</small></div><span>→</span>
+<div class="ns">Readers<br><small>3 open models on Nosana + Claude</small></div><span>→</span><div>Code grader<br><small>no LLM judge</small></div><span>→</span><div>Dashboard / stage</div></div>
+<div class="three"><div class="big2"><b class="dtc">{n_sb}</b><span>Daytona sandboxes</span></div><div class="big2"><b class="dtc">{n_tool}</b><span>tool calls inside sandboxes (median {med_tool:.2f}s)</span></div>
+<div class="big2"><b class="nsc">{nosana_runs}</b><span>graded runs on Nosana GPUs (Qwen 3.5 9B, gpt-oss 20B, Gemma 4 26B)</span></div></div>
+<p class="note">Counts from results/runs*.jsonl, infra-excluded runs removed. {n_runs} graded runs in total (results/summary.json).</p></section>""")
+slides.append(f"""<section><h2>Product, next steps, limits</h2><div class="two">
+<div><h3>Product</h3><ul><li>Point it at your page: every AI reader × every layout, graded against your own answer key</li><li>Shows which fact breaks and for which model, with replayable screenshots</li></ul>
+<h3>Next</h3><ul><li>Commerce pages, e.g. Naver Smart Store product pages: options and prices behind tabs and selectors</li><li>CI check: "does this layout change break any AI reader?"</li><li>Auto-fix suggestion per failing fact</li></ul></div>
+<div><h3>Limits</h3><ul><li>One page, reproduced layouts (not the live site), q1 for the browser runs</li><li>Small n: A 10 reps/model, C 5 reps/model; directional, not proof</li><li>Computer use is n=1</li><li>OpenAI excluded (no API credits)</li></ul></div></div>
+<p class="url2">github.com/TaeWoo1/daytona-nosana-hackathon · solo build, GitHub @TaeWoo1</p></section>""")
+# --- appendix ---
+slides.append(f"""<section class="jc"><h2><span class="apx">Appendix</span> Judging criteria</h2><div class="two">
+<div class="card"><h3>Completeness</h3><ul><li>End-to-end: real page → gold → layouts → Daytona sandboxes → reader agents → code grader → dashboard, stage, deck</li>
 <li>{n_runs} graded runs committed in results/, so every number can be checked without rerunning</li></ul></div>
 <div class="card"><h3>Innovation</h3><ul><li>Measures comprehension accuracy (does the agent get the facts right?), not search visibility</li>
-<li>Reading mode as a dimension: crawler text vs static visible text vs a real browser with a click tool</li></ul></div>
-<div class="card"><h3>Real-Life Problem Solving</h3><ul><li>Real daytona.io/pricing: on the tabbed layout, runs with no click were correct {_k(_a['correct_given_no_click'])} and {_k(_a['confident_wrong_rate'])} runs were confident wrong</li>
+<li>Reading mode as a dimension: crawler text, static visible text, real browser with click, computer use (n=1)</li></ul></div>
+<div class="card"><h3>Real-Life Problem Solving</h3><ul><li>Layout reproducing daytona.io/pricing: runs with no click were correct {_k(_a['correct_given_no_click'])}; {_k(_a['confident_wrong_rate'])} runs confident wrong</li>
 <li>Same facts, explicit layout C: {_k(_c['correct_rate'])} correct</li></ul></div>
-<div class="card"><h3>Sponsored Product Usage</h3><ul><li>Daytona: {n_sb} ephemeral sandboxes; headless Chromium + every tool call inside the sandbox; parallel fan-out</li>
+<div class="card"><h3>Sponsored Product Usage</h3><ul><li>Daytona: {n_sb} ephemeral sandboxes; Chromium + every tool call inside the sandbox; computer-use desktop + recording</li>
 <li>Nosana: 3 open-weight models (Qwen 3.5 9B, gpt-oss 20B, Gemma 4 26B) on RTX 3090/4090</li></ul></div></div>
-<p class="note">Rendered-browser numbers: results/runs_rendered_v2_n10.jsonl, q1 (A 10 reps/model, C 5 reps/model), from summary.json → behavior.</p></section>""")
-slides.append("""<section class="title"><h2>Thanks</h2><p class="big">AgentReadable: make sure every AI reader quotes your page right.</p>
-<p>Solo build · GitHub @TaeWoo1</p><p>Repo: github.com/TaeWoo1/daytona-nosana-hackathon</p><p class="spons"><b>Daytona</b> · <b>Nosana</b></p></section>""")
+<p class="note">Rendered-browser numbers: results/runs_rendered_v2_n10.jsonl, q1, from summary.json → behavior.</p></section>""")
+for mode in [m for m in modes[::-1] if m not in ("rendered_text", "rendered_text_v2_n3")]:
+    slides.append(f"""<section><h2><span class="apx">Appendix</span> q1 · {mode}</h2>{strict_q(mode, "q1_gpu_ondemand")}
+<p class="note">Cell = fully correct runs / runs (gold $0.99/h on-demand); "wrong" = runs with a confident wrong value. Source: results/summary.json (cells_by_question).</p></section>""")
+for mode in [m for m in modes if not m.startswith("rendered_text")]:
+    slides.append(f"""<section><h2><span class="apx">Appendix</span> All 5 questions · {mode}</h2>{heat(mode)}
+<p class="note">Cell = mean share of answer fields matching gold. n = runs (5 questions × 3 reps). Outlined = weakest model per layout. Source: results/summary.json.</p></section>""")
+slides.append(f"""<section><h2><span class="apx">Appendix</span> Limitations</h2><ul>
+<li>One page; layouts are our reproductions of its structure (v1 plain mirror, v2 styled like the real page), not the live site.</li>
+<li>visible_text is a static approximation. Real-browser runs: q1 only, layouts A and C.</li>
+<li>Field accuracy gives partial credit; see the "fully correct" tables.</li>
+<li>Excluded: {html.escape(json.dumps(excl))}.</li>
+<li>Gold ambiguity: "first 5 GiB free" per sandbox or per org? (Both inside the q2 tolerance.)</li></ul></section>""")
 
 doc = f"""<!doctype html><html><head><meta charset="utf-8"><title>AgentReadable deck</title><style>
-@page{{size:1280px 720px;margin:0}} body{{margin:0;font:22px/1.45 system-ui,sans-serif;color:#1d1d1b;background:#fff}}
-section{{width:1280px;height:720px;box-sizing:border-box;padding:56px 72px;page-break-after:always;overflow:hidden;position:relative}}
-h1{{font-size:72px;margin:120px 0 20px}} h2{{font-size:40px;margin:0 0 24px}} .big{{font-size:28px}} .spons{{position:absolute;bottom:56px;font-size:24px}}
-.note{{font-size:15px;color:#666;position:absolute;bottom:36px;left:72px;right:72px}} code{{background:#f2f2ee;padding:0 4px;border-radius:3px}}
+@page{{size:1280px 720px;margin:0}} body{{margin:0;font:22px/1.45 Inter,system-ui,sans-serif;color:#ededed;background:#0a0a0a}}
+section{{width:1280px;height:720px;box-sizing:border-box;padding:48px 64px;page-break-after:always;overflow:hidden;position:relative;background:#0a0a0a}}
+h1{{font-size:96px;margin:10px 0 18px;line-height:1}} h2{{font-size:38px;margin:0 0 20px}} h3{{font-size:22px;margin:6px 0;color:#bbb}} .big{{font-size:24px;color:#ccc}}
+.red{{color:#ef4444}} .grn{{color:#22c55e}} .dtc{{color:#4ade80}} .nsc{{color:#60a5fa}} b{{color:#fff}}
+.note{{font-size:14px;color:#777;position:absolute;bottom:28px;left:64px;right:64px}} code{{background:#1f1f1f;padding:0 4px;border-radius:3px;font-size:.9em}}
+.kick{{font:600 20px ui-monospace,monospace;color:#3b82f6;letter-spacing:.1em;margin:40px 0 0}} .url{{font:16px ui-monospace,monospace;color:#888}} .url2{{font:18px ui-monospace,monospace;color:#3b82f6;position:absolute;bottom:56px}}
+.hook{{display:grid;grid-template-columns:1fr 1fr;gap:32px}} .ref{{margin:30px 0 0}} .ref img{{width:100%;border:1px solid #333;border-radius:8px}} figcaption,.cap{{font-size:15px;color:#999;margin-top:6px}}
+.two{{display:grid;grid-template-columns:1fr 1fr;gap:28px}} .three{{display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;margin-top:18px}} figure{{margin:0}}
+.shot{{max-width:100%;max-height:390px;border:1px solid #333;border-radius:8px}} .pre{{background:#151515;border:1px solid #333;border-radius:8px;padding:10px 16px;font:15px/1.3 ui-monospace,monospace;color:#ddd;margin:0;white-space:pre-wrap}}
+.stage{{width:100%;border:1px solid #333;border-radius:8px;max-height:430px;object-fit:contain}}
+.dr{{display:flex;align-items:center;gap:14px;margin:6px 0}} .dm{{width:150px;font-size:19px}} .ds{{width:330px;display:flex;gap:6px}} .dn{{font-size:16px;color:#aaa}}
+.d{{display:inline-block;width:24px;height:24px;border-radius:50%;vertical-align:middle;margin-right:4px}} .d.correct{{background:#22c55e}} .d.confident_wrong{{background:#ef4444}} .d.not_found{{background:#f59e0b}} .d.invalid{{background:#888}}
+.hlx{{font-size:22px;margin:10px 0 0}} .big2{{background:#151515;border:1px solid #333;border-radius:10px;padding:10px 16px}} .big2 b{{font-size:40px;display:block}} .big2 span{{font-size:15px;color:#aaa}}
+.lg{{font-size:14px;color:#aaa;margin-top:10px}} .lg .d{{width:14px;height:14px;margin-left:10px}} .n1{{font-size:18px;color:#f59e0b;border:1px solid #f59e0b;border-radius:20px;padding:2px 12px;vertical-align:middle}}
+.flow{{display:flex;align-items:center;gap:8px;margin:30px 0 30px}} .flow div{{border:2px solid #444;border-radius:10px;padding:12px 8px;font-size:18px;flex:1;text-align:center}}
+.flow small{{display:block;font-size:13px;color:#999}} .dt{{border-color:#22c55e!important}} .ns{{border-color:#3b82f6!important}}
+.apx{{font:600 14px ui-monospace,monospace;color:#3b82f6;border:1px solid #3b82f6;border-radius:20px;padding:2px 10px;vertical-align:middle;margin-right:10px}}
 .hm{{border-collapse:separate;border-spacing:6px;width:100%}} .hm th{{font-size:18px;text-align:left}} .hm td{{color:#fff;text-align:center;font-size:30px;font-weight:700;border-radius:8px;padding:12px 4px}}
-.hm td small{{display:block;font-size:13px;font-weight:400}} .hm td.w{{outline:4px solid #1d1d1b}}
-.two{{display:grid;grid-template-columns:1fr 1fr;gap:24px}} .ex,.card{{border:2px solid #ddd;border-radius:10px;padding:14px 18px}} .exh{{font-weight:700}}
-.qt{{color:#666;font-style:italic;font-size:18px}} .flow{{display:flex;align-items:center;gap:8px;margin:20px 0 30px}} .flow div{{border:2px solid #ccc;border-radius:10px;padding:10px;font-size:18px;flex:1;text-align:center}}
-.flow small{{display:block;font-size:13px;color:#666}} .dt{{border-color:#2a6!important}} .ns{{border-color:#36c!important}}
-.q{{margin:8px 0 14px}} .bar{{display:flex;align-items:center;gap:10px;font-size:16px;margin:3px 0}} .bl{{width:240px}} .bn{{width:60px;color:#666}}
-.tr{{flex:1;display:flex;height:24px;border-radius:4px;overflow:hidden;background:#eee}} .s{{display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:13px}}
-.ct{{border-collapse:collapse;font-size:18px;margin-bottom:12px}} .ct td,.ct th{{border:1px solid #ccc;padding:4px 8px;text-align:center}}
-.frames{{display:grid;grid-template-columns:1fr 1fr;gap:8px}} .frames figure{{margin:0}} .frames img{{width:100%;border:1px solid #ccc}}
-.jc .two{{gap:14px}} .jc .card{{padding:6px 16px}} .jc h3{{margin:4px 0;font-size:22px}} .jc ul{{margin:2px 0 6px;font-size:17px;line-height:1.35;padding-left:20px}}
-.frames figcaption{{font-size:13px;color:#666}} .note2{{font-size:13px;color:#666}} .hl{{font-size:17px;font-weight:600;margin:8px 0 0}}
-.correct{{background:hsl(130 55% 36%)}} .not_found{{background:hsl(40 80% 45%)}} .wrong{{background:hsl(0 65% 48%)}} .invalid{{background:#888}} .lg .s{{padding:2px 10px;margin-right:6px}} .tag{{color:#fff;border-radius:4px;padding:1px 8px;font-size:16px;margin-left:6px}} .ok{{background:hsl(130 55% 36%)}} .bad{{background:hsl(0 65% 48%)}}
+.hm td small{{display:block;font-size:13px;font-weight:400}} .hm td.w{{outline:4px solid #fff}} .card{{border:1px solid #333;border-radius:10px;padding:14px 18px;background:#151515}}
+.jc .two{{gap:14px}} .jc .card{{padding:6px 16px}} .jc h3{{margin:4px 0;font-size:22px;color:#fff}} .jc ul{{margin:2px 0 6px;font-size:17px;line-height:1.35;padding-left:20px}}
 </style></head><body>{''.join(slides)}</body></html>"""
 (ROOT / "deck").mkdir(exist_ok=True)
 (ROOT / "deck/deck.html").write_text(doc)
-chrome = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 subprocess.run([chrome, "--headless=new", "--disable-gpu", "--no-pdf-header-footer",
                 f"--print-to-pdf={ROOT / 'deck/deck.pdf'}", f"file://{ROOT / 'deck/deck.html'}"],
                check=True, capture_output=True, timeout=120)

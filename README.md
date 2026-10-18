@@ -4,7 +4,7 @@
 
 Built solo (GitHub @TaeWoo1) at Daytona HackSprint Seoul (2026-10-18) with **Daytona** sandboxes and **Nosana** GPUs.
 
-- **Problem:** on the real `daytona.io/pricing`, the GPU table opens on the Preemptible tab. Agents asked for an RTX 4090 "that won't be interrupted" quote $0.57 instead of the on-demand $0.99.
+- **Problem:** the real `daytona.io/pricing` opens its GPU table on the Preemptible tab; the on-demand price is behind a click. All experiments run on layouts that reproduce that page structure (served from Daytona sandboxes with prices from the real page), not on the live site. On that reproduction, agents asked for an RTX 4090 "that won't be interrupted" often quote the preemptible $0.57 instead of the on-demand $0.99.
 - **What we built:** a fan-out evaluator. Each page layout is served in its own Daytona sandbox, and reader agents (3 open-weight models on Nosana GPUs + Claude) answer with a real headless Chromium inside the sandbox. A code-only grader checks every answer.
 - **Headline (q1, real browser, styled page, `results/runs_rendered_v2_n10.jsonl`):** on the original tabbed layout, runs that clicked the On-demand tab were correct 21/23, and runs that didn't were correct 0/10 (12/33 runs confident wrong overall). The explicit layout C was correct 20/20. 521 graded runs in total.
 - **Demo:** `results/stage.html` (40 s autoplay), `results/dashboard.html` (Replay with screenshots), `./demo.sh` (live rerun), `deck/deck.pdf`.
@@ -199,6 +199,18 @@ In v2 A, as on the real page, the GPU panels have no visible "Preemptible ($/hou
 | C_faq_structured | q5_windows | 9 | 0 | 0 | 3 | 12 |
 
 Excluded infra errors: {'openai: RateLimitError': 60}
+
+## Computer use (qualitative, n=1)
+
+Separate from the headline numbers. `src/cu_demo_stdlib.py` opens the v2 styled site in Chromium on a Daytona computer-use desktop (Xvfb 1024x768, session recorded with the Daytona recording API). The reader sees **screenshots only** and acts with pixel `click(x,y)` / `scroll` / `answer`. One run per cell; outputs in `results/cu_aside/` (step PNGs, `run.json`, `recording.mp4`). Details in LOG.md (16:51).
+
+| Reader | Layout | What happened | Answer |
+|---|---|---|---|
+| Claude (claude-sonnet-4-5) | A original | scroll → pixel-click on the "On-demand" pill (308,417) | $0.99 on_demand ✓ |
+| Claude (claude-sonnet-4-5) | C explicit | scroll, no click | $0.99 on_demand ✓ |
+| Gemma 4 26B (Nosana) | A original | said "switch to On-demand" every step, but clicked (301,538) six times: the MI355X row, not the tab | no answer (not_found) |
+
+The Gemma coordinate miss may partly come from image resizing inside Ollama (a harness factor), not only model grounding. **Unverified.** n=1 per cell, so this is an illustration, not a measurement.
 
 ## Judging criteria
 

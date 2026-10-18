@@ -153,3 +153,4 @@
   - README: the top lines now carry the problem, what we built, the headline with n (generated from summary.json behavior), and demo pointers.
   - README sponsor/completeness counts recomputed over all graded batches: 32 sandboxes, 741 graded tool calls, 391 Nosana runs, 247 frames.
   - Deck: repo URL on the title slide, plus a "Judging criteria" slide with the 4 official names (16 slides). LICENSE not added (user's call).
+- 16:56 Committed the computer-use aside (`src/cu_demo_stdlib.py`, `results/cu_aside/`, 3.1 MB incl. recordings). README: new "Computer use (qualitative, n=1)" section; Problem line now states experiments ran on layouts reproducing the real page structure, not the live site.

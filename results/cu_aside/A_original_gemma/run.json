@@ -1,0 +1,93 @@
+{
+  "layout": "A_original",
+  "model": "gemma4:26b",
+  "sandbox_id": "bee5de44-1a37-4bfb-9439-a87ea6e0c5b1",
+  "question": "I need an RTX 4090 GPU sandbox that will not be interrupted. How much per hour?",
+  "steps": [
+    {
+      "step": 1,
+      "frame": "step_1.png",
+      "action": "scroll",
+      "input": {
+        "direction": "down"
+      },
+      "text": "",
+      "llm_sec": 9.14
+    },
+    {
+      "step": 2,
+      "frame": "step_2.png",
+      "action": "click",
+      "input": {
+        "why": "To see the non-interrupted (on-demand) pricing for GPUs.",
+        "x": 301,
+        "y": 538
+      },
+      "text": "",
+      "llm_sec": 5.74
+    },
+    {
+      "step": 3,
+      "frame": "step_3.png",
+      "action": "click",
+      "input": {
+        "why": "To see the non-interrupted (on-demand) pricing for GPUs.",
+        "x": 301,
+        "y": 538
+      },
+      "text": "",
+      "llm_sec": 7.07
+    },
+    {
+      "step": 4,
+      "frame": "step_4.png",
+      "action": "click",
+      "input": {
+        "why": "To switch from Preemptible to On-demand pricing to find the non-interrupted price.",
+        "x": 301,
+        "y": 538
+      },
+      "text": "",
+      "llm_sec": 5.14
+    },
+    {
+      "step": 5,
+      "frame": "step_5.png",
+      "action": "click",
+      "input": {
+        "why": "To switch from Preemptible to On-demand pricing to find the non-interrupted price for RTX 4090.",
+        "x": 301,
+        "y": 538
+      },
+      "text": "",
+      "llm_sec": 8.88
+    },
+    {
+      "step": 6,
+      "frame": "step_6.png",
+      "action": "click",
+      "input": {
+        "why": "To switch to On-demand pricing for non-interrupted sandboxes.",
+        "x": 301,
+        "y": 538
+      },
+      "text": "",
+      "llm_sec": 12.94
+    },
+    {
+      "step": 7,
+      "frame": "step_7.png",
+      "action": "click",
+      "input": {
+        "why": "To switch from Preemptible to On-demand pricing for non-interrupted sandboxes.",
+        "x": 301,
+        "y": 538
+      },
+      "text": "",
+      "llm_sec": 12.65
+    }
+  ],
+  "answer": null,
+  "error": null,
+  "verdict": "not_found"
+}

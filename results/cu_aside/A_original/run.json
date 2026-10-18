@@ -1,0 +1,50 @@
+{
+  "layout": "A_original",
+  "model": "claude-sonnet-4-5",
+  "sandbox_id": "9fbdd19c-a133-494b-a08c-2a9414c96b4a",
+  "question": "I need an RTX 4090 GPU sandbox that will not be interrupted. How much per hour?",
+  "steps": [
+    {
+      "step": 1,
+      "frame": "step_1.png",
+      "action": "scroll",
+      "input": {
+        "direction": "down",
+        "amount": 3
+      },
+      "text": "I need to find pricing information for an RTX 4090 GPU sandbox that won't be interrupted (which would be on-demand pricing, not preemptible). Let me scroll down to see more pricing details.",
+      "llm_sec": 3.03
+    },
+    {
+      "step": 2,
+      "frame": "step_2.png",
+      "action": "click",
+      "input": {
+        "x": 308,
+        "y": 417,
+        "why": "Click on the On-demand tab to see non-interruptible pricing for RTX 4090"
+      },
+      "text": "I can see the GPU pricing section. I notice there are two pricing options: \"Preemptible\" and \"On-demand\". Currently, the \"Preemptible\" option appears to be selected. I can see the Nvidia RTX 4090 listed at $0.57/h, but I need to check if this is the preemptible price. Let me click on \"On-demand\" to see the non-interruptible pricing.",
+      "llm_sec": 5.0
+    },
+    {
+      "step": 3,
+      "frame": "step_3.png",
+      "action": "answer",
+      "input": {
+        "usd_per_hour": 0.99,
+        "pricing_type": "on_demand",
+        "evidence": "The pricing page shows the Nvidia RTX 4090 under the \"On-demand\" tab (which provides non-interruptible instances) at $0.99/h."
+      },
+      "text": "Perfect! I can now see the On-demand pricing, which is for non-interruptible instances. The Nvidia RTX 4090 is listed at $0.99/h for on-demand (non-interruptible) pricing.",
+      "llm_sec": 4.48
+    }
+  ],
+  "answer": {
+    "usd_per_hour": 0.99,
+    "pricing_type": "on_demand",
+    "evidence": "The pricing page shows the Nvidia RTX 4090 under the \"On-demand\" tab (which provides non-interruptible instances) at $0.99/h."
+  },
+  "error": null,
+  "verdict": "correct"
+}

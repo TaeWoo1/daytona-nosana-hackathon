@@ -1,0 +1,38 @@
+{
+  "layout": "C_faq_structured",
+  "model": "claude-sonnet-4-5",
+  "sandbox_id": "d448b287-b8e6-4a21-9030-ce27337348da",
+  "question": "I need an RTX 4090 GPU sandbox that will not be interrupted. How much per hour?",
+  "steps": [
+    {
+      "step": 1,
+      "frame": "step_1.png",
+      "action": "scroll",
+      "input": {
+        "direction": "down",
+        "amount": 3
+      },
+      "text": "I need to find pricing information for an RTX 4090 GPU sandbox that won't be interrupted (which would be on-demand pricing, not preemptible). Let me scroll down to see more pricing details.",
+      "llm_sec": 2.88
+    },
+    {
+      "step": 2,
+      "frame": "step_2.png",
+      "action": "answer",
+      "input": {
+        "usd_per_hour": 0.99,
+        "pricing_type": "on_demand",
+        "evidence": "The pricing page shows \"Nvidia RTX 4090\" with two pricing options: \"$0.57/h | $0.99/h\". The page header indicates \"GPU Preemptible (may be interrupted) | On-demand (not interrupted)\". Since the customer needs a GPU that will not be interrupted, the on-demand price of $0.99/h applies."
+      },
+      "text": "Perfect! I can now see the GPU pricing information. I can see the Nvidia RTX 4090 listed with two prices:\n- $0.57/h (Preemptible - may be interrupted)\n- $0.99/h (On-demand - not interrupted)\n\nSince the customer specifically needs a GPU sandbox that will NOT be interrupted, they need the on-demand pricing.",
+      "llm_sec": 6.53
+    }
+  ],
+  "answer": {
+    "usd_per_hour": 0.99,
+    "pricing_type": "on_demand",
+    "evidence": "The pricing page shows \"Nvidia RTX 4090\" with two pricing options: \"$0.57/h | $0.99/h\". The page header indicates \"GPU Preemptible (may be interrupted) | On-demand (not interrupted)\". Since the customer needs a GPU that will not be interrupted, the on-demand price of $0.99/h applies."
+  },
+  "error": null,
+  "verdict": "correct"
+}

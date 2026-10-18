@@ -87,3 +87,9 @@
   - Renamed the deck.py Nosana run counter variable to `nosana_runs`.
   - HANDOFF now points to the CLAUDE.md grep instead of quoting the patterns.
   - CLAUDE.md itself quotes the patterns, so it stays untracked.
+- 16:03 Both visible_text batches finished (180 runs). Final grading: 420 graded runs, plus 60 OpenAI runs excluded (429).
+  - **Headline, q1, visible_text, all 4 models pooled:** A 0/12 fully correct (4 wrong, 8 not found), B 10/12 (2 Qwen invalid JSON), C 12/12. In html_text, A got 12/12.
+  - gpt-oss gave $0.57 as "on_demand" in 3/3 A-visible runs. Claude and Gemma said not_found 3/3 each.
+  - q1 worst-model rate (visible_text): A 0%, B 33% (Qwen), C 100%.
+  - NOPAGE field accuracy per model is 0–20%.
+  - README results, dashboard and deck were regenerated from summary.json.

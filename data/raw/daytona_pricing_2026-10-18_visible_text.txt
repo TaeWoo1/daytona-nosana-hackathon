@@ -1,0 +1,268 @@
+=== Visible text, default state (Preemptible tab), captured 2026-10-18 ~15:35 KST from https://www.daytona.io/pricing ===
+/
+
+DOCS
+
+CUSTOMERS
+
+PRICING
+
+STARTUPS
+
+BLOG
+
+Sign in
+
+Contact us
+
+Build for free, 
+pay as you scale.
+
+Start for free
+
+Contact Sales
+
+Compute
+
+vCPU
+
+$0.0504/h
+
+Memory
+
+GiB
+
+$0.0162/h
+
+Storage
+
+GiB
+
+$0.000108/h
+
+*Price per GiB after first 5 free
+
+OS
+
+Windows
+
+$0.0858/vCPU/h
+
+GPU
+
+Preemptible
+
+On-demand
+
+Preemptible ($/hour)
+
+Nvidia B300
+
+$4.08/h
+
+Nvidia B200
+
+$3.59/h
+
+AMD MI355X
+
+$3.44/h
+
+Nvidia H200
+
+$2.61/h
+
+Nvidia H100
+
+$2.27/h
+
+Nvidia RTX PRO 6000
+
+$1.74/h
+
+Nvidia RTX 5090
+
+$0.74/h
+
+Nvidia RTX 4090
+
+$0.57/h
+
+Instant Sandboxes. Pay-as-You-Go.
+
+Daytona lets you spin up sandboxes in milliseconds and shut them down just as fast.
+
+Use what you need, when you need it. $200 in free compute included.
+
+GPU
+
+12GB GDDR6 
+
+GPU
+
+16-CORE
+
+GPU
+
+16-CORE
+
+GPU
+
+8-CORE
+
+GPU
+
+32-CORE
+
+GPU
+
+12GB GDDR6 
+
+All billing is calculated per second.
+
+Sign up for a free trial - no credit card required
+
+Pay as you go with usage-based pricing
+
+Unlock volume discounts as you scale
+
+Start-ups
+
+Daytona supports startups with up to $50k in credits for free.
+
+Sign up for credits
+
+Enterprise
+
+Designed for businesses that need larger limits, SSO, audit logs, or BYOC
+
+Contact Sales
+
+NEW
+Startup Program
+
+Learn More
+
+COMPANY
+
+About
+
+Careers
+
+Brand
+
+Press
+
+Partner
+
+Events
+
+Pacers Program
+
+Startup Program
+
+SUPPORT
+
+Documentation
+
+Contact
+
+Blog
+
+Definitions
+
+Pricing
+
+System Status
+
+Changelog
+
+Trust Center
+
+FOLLOW DAYTONA
+
+Github
+
+Slack
+
+Twitter
+
+Youtube
+
+Linkedin
+
+RSS
+
+POPULAR TOPICS
+
+AI Agents SDK
+
+AI Stack Map
+
+AI Infrastructure
+
+Train GPT Model
+
+LLM Code Isolation
+
+Run AI Code
+
+Secure AI Code
+
+AI-Ready Workspaces
+
+AI Sandbox
+
+© 2026 DAYTONA PLATFORMS INC.
+
+Privacy Policy
+
+Terms of Service
+
+SLA
+
+DPA
+
+                                     
+
+This website uses cookies to measure and improve your experience. Read our Terms of Service.
+
+=== GPU section after clicking "On-demand" tab ===
+Preemptible
+
+On-demand
+
+On-demand ($/hour)
+
+Nvidia B300
+
+$7.10/h
+
+Nvidia B200
+
+$6.25/h
+
+AMD MI355X
+
+$5.99/h
+
+Nvidia H200
+
+$4.54/h
+
+Nvidia H100
+
+$3.95/h
+
+Nvidia RTX PRO 6000
+
+$3.03/h
+
+Nvidia RTX 5090
+
+$1.29/h
+
+Nvidia RTX 4090
+
+$0.99/h
+

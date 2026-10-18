@@ -1,0 +1,64 @@
+{
+  "_status": "DRAFT - needs human check (1 min). Source: data/raw/daytona_pricing_2026-10-18_*. Captured 2026-10-18 ~15:35 KST from https://www.daytona.io/pricing",
+  "_note": "Facts must stay IDENTICAL across layout variants A/B/C. Only arrangement changes.",
+  "facts": {
+    "vcpu_usd_per_hour": 0.0504,
+    "memory_usd_per_gib_hour": 0.0162,
+    "storage_usd_per_gib_hour": 0.000108,
+    "storage_free_gib": 5,
+    "windows_usd_per_vcpu_hour": 0.0858,
+    "billing_granularity": "per_second",
+    "free_compute_credit_usd": 200,
+    "credit_card_required_for_trial": false,
+    "startup_program_max_credits_usd": 50000,
+    "gpu_usd_per_hour": {
+      "rtx_4090": {"preemptible": 0.57, "on_demand": 0.99},
+      "rtx_5090": {"preemptible": 0.74, "on_demand": 1.29},
+      "rtx_pro_6000": {"preemptible": 1.74, "on_demand": 3.03},
+      "h100": {"preemptible": 2.27, "on_demand": 3.95},
+      "h200": {"preemptible": 2.61, "on_demand": 4.54},
+      "amd_mi355x": {"preemptible": 3.44, "on_demand": 5.99},
+      "b200": {"preemptible": 3.59, "on_demand": 6.25},
+      "b300": {"preemptible": 4.08, "on_demand": 7.10}
+    },
+    "gpu_table_default_tab": "preemptible"
+  },
+  "ambiguities_to_verify_with_daytona_staff": [
+    "'*Price per GiB after first 5 free' - is the 5 GiB free per sandbox or per organization?",
+    "Preemptible definition (can be interrupted?) is not explained on the page itself."
+  ],
+  "questions": [
+    {
+      "id": "q1_gpu_ondemand",
+      "user_question": "I need an RTX 4090 GPU sandbox that will not be interrupted. How much per hour?",
+      "answer_schema": {"usd_per_hour": "number|null", "pricing_type": "preemptible|on_demand|unknown"},
+      "gold": {"usd_per_hour": 0.99, "pricing_type": "on_demand"},
+      "trap": "Default visible tab shows preemptible $0.57/h; on-demand only after clicking a tab (both present in HTML)."
+    },
+    {
+      "id": "q2_cpu_sandbox_cost",
+      "user_question": "What does a sandbox with 2 vCPU, 4 GiB RAM and 8 GiB disk cost per hour?",
+      "answer_schema": {"usd_per_hour": "number|null"},
+      "gold": {"usd_per_hour": 0.165924, "tolerance": 0.002, "calc": "2*0.0504 + 4*0.0162 + (8-5)*0.000108"},
+      "trap": "'first 5 GiB free' footnote; unit pricing requires multiplication. Gold depends on ambiguity #1."
+    },
+    {
+      "id": "q3_signup",
+      "user_question": "Do I need a credit card to start, and how much free usage do I get?",
+      "answer_schema": {"credit_card_required": "boolean|null", "free_credit_usd": "number|null"},
+      "gold": {"credit_card_required": false, "free_credit_usd": 200}
+    },
+    {
+      "id": "q4_billing",
+      "user_question": "Am I billed per hour, per minute, or per second?",
+      "answer_schema": {"billing_granularity": "per_hour|per_minute|per_second|unknown"},
+      "gold": {"billing_granularity": "per_second"}
+    },
+    {
+      "id": "q5_windows",
+      "user_question": "How much does a Windows sandbox cost per vCPU per hour?",
+      "answer_schema": {"usd_per_vcpu_hour": "number|null"},
+      "gold": {"usd_per_vcpu_hour": 0.0858}
+    }
+  ]
+}

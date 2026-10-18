@@ -1,0 +1,89 @@
+# LOG (append-only, KST)
+
+## 2026-10-18
+
+- 13:05 Analyzed the hackathon (Luma page and past Daytona HackSprints).
+  - The sponsor goal is Daytona's Asia developer acquisition.
+  - Judging criteria: completeness / innovation / real problem / sponsor usage.
+  - Hacking window is 15:00–17:00, with 3-min demos.
+- 13:20 Idea evolution:
+  - The persona-based "virtual customer A/B" idea was dropped. A friend's store-layout simulation already won with that approach, and Daytona's SF #1 "A/B GPT" is the same family.
+  - Pivot to AEO comprehension: the agent IS the reader, and grading is fact-based against gold answers.
+- 13:30 Scope set: "When our customer asks an AI agent, how accurately are facts conveyed, by page layout × model?"
+  - Avoid the A/B, persona, and conversion wording.
+- 13:35 Budget research (sub-agents):
+  - Nosana 24 GB GPUs cost $0.19–0.40/h, so $10 is ample.
+  - Daytona small sandbox costs ~$0.067/h. Tier 1 = 10 vCPU, restricted internet.
+- 15:10 Daytona dashboard: Tier 1 confirmed, $200 free credit, no card.
+  - Decided to stay on Tier 1.
+- 15:16 Created API keys.
+  - Daytona "hacksprint-aeo" (Sandboxes scope).
+  - Nosana "hacksprint-aeo" (full, expires 10/25).
+  - Both written to `.env` (gitignored).
+- 15:17 Nosana dashboard deploy editor broke after saving the JSON, so I deployed via REST API (`POST /deployments/create`, strategy SIMPLE).
+  - qwen3.5:9b → RTX 3090 market `CA5p…`
+  - gpt-oss:20b → RTX 4090 market `97G9…`
+  - Env: `OLLAMA_CONTEXT_LENGTH=32768`, `NUM_PARALLEL=4`.
+- 15:21 The Ollama template did not preload models (empty `/api/tags`), so I triggered `/api/pull` manually.
+- 15:24 Both models were loaded, with ctx 32768 confirmed via `/api/ps`. Tool-call smoke test passed (`open_page` called correctly).
+- 15:30 Decided to drop external datasets (NQ, GEO-bench, WebSRC, ...) for today:
+  - They change the topic.
+  - Wikipedia memorization would confound the layout effect.
+  - The data is too heavy for the time left.
+  - Instead: a **real public page** (Daytona pricing), with gold extracted from the page, layout variants, and a NOPAGE baseline.
+- 15:33 Deployed gemma4:26b (MoE) on RTX 4090 (third model family).
+- 15:35 Captured `daytona.io/pricing`.
+  - Real trap: the GPU table defaults to the Preemptible tab (4090 $0.57/h). On-demand ($0.99/h) is behind a tab.
+  - Both values are present in the HTML.
+- 15:38 An attempt to install Python libs into Aside's temp dir triggered a macOS Gatekeeper popup (unsigned `.so`). The libs were deleted.
+  - Decision: all Python execution happens locally (Claude Code / user terminal).
+- 15:40 Wrote `HANDOFF.md`, `LOG.md`, and `data/gold/daytona_pricing_facts.draft.json`.
+  - Gemma pull was in progress.
+- 15:42 Claude Code session started from HANDOFF.
+  - Status check: qwen3.5:9b and gpt-oss:20b loaded on Nosana. gemma4:26b `/api/tags` still empty, so a streaming pull was restarted.
+  - `OPENAI_API_KEY` is empty, so the OpenAI column is skipped unless a key gets added. The Anthropic key is set.
+  - q2 ambiguity note: gold tolerance is ±0.002, and the storage term is at most 8×0.000108 = 0.000864. Both readings (5 GiB free per sandbox or per org, or ignoring storage entirely) land inside the tolerance, so the ambiguity does not change q2 grading.
+- 15:45 gemma4:26b pull finished (ctx 32768). Latency on real page text: qwen 3.6-3.9s, gpt-oss 2.9-3.0s, gemma 7.2s warm / 70s cold, gemma outputs JSON in code fences. Added scripts/nosana_status.sh.
+- 15:45 Built layouts A/B/C via `src/gen_sites.py`. All three are generated from the gold `facts`, so the values match by construction.
+  - A mirrors the real page: the On-demand tabpanel is present but carries `hidden` and `display:none`, and the storage footnote is kept.
+- 15:46 Wrote the in-sandbox extractor `src/sandbox_extract.py` (stdlib only).
+  - `html_text`: all text, including hidden panels. `<style>` and plain `<script>` are dropped, JSON-LD is kept.
+  - `visible_text`: also drops `hidden` and `display:none` subtrees. This is a static approximation, NOT a real browser render.
+- 15:47 Daytona pool test: one sandbox created, site uploaded, `http.server` started, and `open_page` working end-to-end in ~6.5 s.
+- 15:47 Smoke run (A + NOPAGE, q1, n=1 per model):
+  - Gemma's first call took ~198 s because of the model load. The pull had completed.
+  - Qwen problems: it emitted the unquoted enum `unknown` (invalid JSON), and once it returned empty content after tool calls.
+  - Fixes: clearer enum hints in the prompt, lenient quoting of bare enum words, and one "JSON only" nudge if the final content doesn't parse. Nudges are recorded as `nudged` in the runs.
+- 15:48 Bug: jobs were submitted model by model into one shared thread pool, so all threads blocked on Qwen's semaphore and the other models starved.
+  - Fix: one executor per model, sized to that model's concurrency cap.
+  - The aborted partial run (6 Qwen runs) was kept as `results/aborted_154736.jsonl`. It is not used.
+- 15:49 `OPENAI_API_KEY` is now set, so 5 reader models are in the run. Started the full html_text matrix: 4 page conditions × 5 models × 5 questions × 3 reps = 300 runs, on 6 sandboxes (3 layouts × 2).
+- 15:51 Gold fix: the q2 draft gold 0.166124 was an arithmetic slip. 2×0.0504 + 4×0.0162 + 3×0.000108 = 0.165924, and the gold now says 0.165924. Grading doesn't change because the old value was within ±0.002 anyway.
+- 15:50 The OpenAI key returns 429 `credit_balance_exhausted` (no credits), so all 60 OpenAI runs failed.
+  - Decision: grade.py excludes API/infra errors and reports them under `excluded_infra_errors` in summary.json. The OpenAI column is dropped unless credits get added.
+- 15:51 Qwen sometimes emits malformed tool-call XML, and the Ollama server rejects it with HTTP 500 "XML syntax error". That is a reader failure, not infra, so it is graded as `invalid`.
+- 15:51 Interim html_text read (incomplete, ~150 graded runs): Claude, gpt-oss and Gemma are at 100% on A, B and C. Because html_text includes the hidden On-demand panel, the A trap does not bite in this mode.
+  - Next: run visible_text mode (hidden panel dropped) on A/B/C to test the browser-view hypothesis.
+- 15:55 Verified judging criteria on the Luma page (Completeness / Innovation / Real-Life Problem Solving / Sponsored Product Usage). The page does not describe the AI-judge mechanism. Wrote docs/JUDGING.md (criteria-evidence map, AI-legibility checklist, risks). Promoted visible_text mode to should-have for q1.
+- 15:56 Access check: daytona.io robots.txt Allow all, and 6 AI/browser UAs all got 200 with prices. Noted the Cloudflare 2026-09-15 default (Agent bots blocked on ad pages for new domains) as an optional Level-0 access layer / next-steps slide (docs/JUDGING.md §5).
+- 15:58 Plan agreed (HANDOFF §13): finish visible_text Nosana → fix interpretation (invalid shown separately, OpenAI dropped) → README/deck → screenshots/backup video → push 16:50 → submit. Freeze experiments at 16:40.
+
+- 15:53 Started visible_text batches with Claude + gpt-oss, then Qwen + Gemma (A/B/C × 5 q × 3 reps) → `results/runs_visible.jsonl`.
+- 15:55 First visible_text finding, q1 on layout A:
+  - gpt-oss answered $0.57 labelled "on_demand" in 3/3 runs (confident wrong).
+  - Claude answered not_found in 3/3 runs.
+  - On B and C, both models were correct in 3/3 runs. Interim numbers, so check the final summary.json.
+- 15:55 q5 finding: several models answer 0.1362 (= 0.0504 vCPU + 0.0858 Windows), reading "Windows $0.0858/vCPU/h" as a surcharge on top of the vCPU price.
+  - The page doesn't say whether that price is the total or an add-on, so q5 gold is AMBIGUOUS (unverified with Daytona staff). Grading stays at the face value 0.0858, and README/deck flag it.
+- 15:56 Qwen B/q1 (html_text) failures: the values were right, but the JSON broke on an unescaped `"` inside evidence_quote.
+  - Decision: keep strict grading (invalid). Loosening the grader after seeing the data would bias the results, so this is documented instead.
+- 15:56 Added a strict per-question view (`cells_by_question`, runs fully correct) and a q1 heatmap to the dashboard and the deck. Field accuracy gives partial credit (for example not_found price + on_demand type = 1/2).
+- 15:56 Deck: `src/deck.py` → `deck/deck.html` → headless Chrome → `deck/deck.pdf` (~600 KB). All numbers are computed from results/.
+- 15:58 The html_text matrix finished: 300 runs in 501 s (60 OpenAI runs are infra errors from the 429).
+- 15:58 Added `demo.sh` (live stage demo: q1, A vs C, visible_text, Claude + gpt-oss, 2 reps). Test run took 16 s for 8 runs on 2 fresh sandboxes. It writes to `results/demo_live.jsonl`, which is not used for headline numbers.
+  - In the test, gpt-oss on A gave 0.57 (wrong) once and not_found once, which shows run-to-run variance even at temperature 0.
+- 15:58 Secret-pattern hygiene:
+  - `.env.example` placeholder URLs no longer contain the Nosana domain.
+  - Renamed the deck.py Nosana run counter variable to `nosana_runs`.
+  - HANDOFF now points to the CLAUDE.md grep instead of quoting the patterns.
+  - CLAUDE.md itself quotes the patterns, so it stays untracked.

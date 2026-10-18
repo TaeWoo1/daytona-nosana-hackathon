@@ -2,7 +2,7 @@
 
 **AI agents now read your website for your customers. We measure how accurately your real pages get through to each AI reader, by layout and by model, and show which layout survives even the weakest model.**
 
-Built at Daytona HackSprint Seoul (2026-10-18) with **Daytona** sandboxes and **Nosana** GPUs.
+Built solo (GitHub @TaeWoo1) at Daytona HackSprint Seoul (2026-10-18) with **Daytona** sandboxes and **Nosana** GPUs.
 
 ## The problem
 

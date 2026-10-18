@@ -152,7 +152,7 @@ slides.append(f"""<section><h2>Limitations and next steps</h2><ul>
 <li>Gold ambiguity: "first 5 GiB free" per sandbox or per org? (Both readings are inside the q2 tolerance.)</li>
 <li>Next: more pages and verticals, an auto-fix suggestion per failing fact, and a CI check: "does this layout change break any AI reader?"</li></ul></section>""")
 slides.append("""<section class="title"><h2>Thanks</h2><p class="big">AgentReadable: make sure every AI reader quotes your page right.</p>
-<p>Repo: REPO_URL</p><p class="spons"><b>Daytona</b> · <b>Nosana</b></p></section>""")
+<p>Solo build · GitHub @TaeWoo1</p><p>Repo: github.com/TaeWoo1/daytona-nosana-hackathon</p><p class="spons"><b>Daytona</b> · <b>Nosana</b></p></section>""")
 
 doc = f"""<!doctype html><html><head><meta charset="utf-8"><title>AgentReadable deck</title><style>
 @page{{size:1280px 720px;margin:0}} body{{margin:0;font:22px/1.45 system-ui,sans-serif;color:#1d1d1b;background:#fff}}

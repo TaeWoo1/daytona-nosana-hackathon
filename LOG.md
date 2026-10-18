@@ -93,3 +93,4 @@
   - q1 worst-model rate (visible_text): A 0%, B 33% (Qwen), C 100%.
   - NOPAGE field accuracy per model is 0–20%.
   - README results, dashboard and deck were regenerated from summary.json.
+- 16:10 User confirmed: solo build, repo public (it was already PUBLIC), push approved. Added solo/repo info to the README and the deck's last slide.
